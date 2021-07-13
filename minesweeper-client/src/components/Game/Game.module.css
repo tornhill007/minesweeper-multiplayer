@@ -1,0 +1,14 @@
+.itemCell {
+    background-color: #c7c7c7;
+    width: 24px;
+    font-size: 10px;
+    height: 24px;
+}
+
+.emptyOpened {
+    background-color: #e8e8e8;
+}
+
+.blownUpBackground {
+    background-color: red;
+}

@@ -1,0 +1,14 @@
+
+.modal {
+    display: block!important;
+    margin-top: 140px;
+}
+
+.close {
+    display: none;
+}
+
+.modal-body {
+    display: flex;
+    justify-content: center;
+}
