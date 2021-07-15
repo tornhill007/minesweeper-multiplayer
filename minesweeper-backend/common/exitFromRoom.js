@@ -6,7 +6,7 @@ const UsersMain = require('../models/UsersMain');
 const Rooms = require('../models/Rooms');
 const Users = require('../models/Users');
 const buildNewRecord = require('./buildNewRecord');
-const socketMap = require('./map')
+const socketMap = require('./gamesMap')
 const createObjectFromMessage = require('../helpers/createObjectFromMessage')
 
 const exitFromRoom = async (tab, user) => {

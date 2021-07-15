@@ -15,14 +15,9 @@ const Tabs = require('../models/Tabs');
 
 
 const Games = db.define('games', {
-    id: {
-      type: DataTypes.UUID,
-      autoIncrement: true,
-      primaryKey: true,
-      allowNull: false
-    },
     gameid: {
       type: DataTypes.STRING,
+      primaryKey: true,
       allowNull: false
     },
     fieldsize: {

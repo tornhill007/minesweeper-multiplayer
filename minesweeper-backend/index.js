@@ -14,6 +14,9 @@ const jwt = require("jsonwebtoken");
 const keys = require('./config/keys');
 const createGame = require('./helpers/createGame');
 const generateUID = require('./helpers/generateUID');
+const gamesMap = require('./common/gamesMap');
+const socketsMap = require('./common/socketsMap');
+const doAction = require('./helpers/doAction');
 
 //Test DB
 app.use(cors());
@@ -49,6 +52,10 @@ io.on("connection", async (socket) => {
   let user = await Users.getUserByUserId(decoded.userId);
   if (!user) return;
   socket.user = user;
+
+  socketsMap[socket.handshake.query.tabId] = socket;
+  user.createTab({tabid: socket.handshake.query.tabId});
+
   console.log("correct connection");
   socket.on('game/create', async (data, callback) => {
       if (!data) {
@@ -56,6 +63,7 @@ io.on("connection", async (socket) => {
       }
       let dataTable = createGame(data.gameInfo);
       let gameId = generateUID();
+      gamesMap[gameId] = dataTable;
       socket.emit('game/new', {dataTable, gameId});
       let newGame = Games.build({
         maxplayers: data.gameInfo.maxPlayers,
@@ -64,8 +72,8 @@ io.on("connection", async (socket) => {
         gameid: gameId,
         gamename: data.gameInfo.gameName
       })
-    
-    // let tableJson = JSON.stringify(dataTable);
+
+      // let tableJson = JSON.stringify(dataTable);
       await newGame.save();
       newGame.createTab({tabid: socket.handshake.query.tabId});
       let newHistory = History.build({
@@ -74,8 +82,28 @@ io.on("connection", async (socket) => {
         history: dataTable
       })
       await newHistory.save();
+
+      let activeGamesList = await Games.findAll();
+
+      let socketsList = Object.values(socketsMap);
+      console.log(socketsList);
+      socketsList.forEach(item => {
+        item.emit('game/list', activeGamesList);
+      })
     }
   )
+
+  socket.on("game/join", async (data, callback) => {
+    let dataTable = gamesMap[data.gameId];
+
+    let game = await Games.findOne({
+      where: {
+        gameid: data.gameId
+      }
+    })
+    game.createTab({tabid: socket.handshake.query.tabId});
+    socket.emit('game/new', {dataTable, gameId: data.gameId});
+  })
 
   socket.on('game/action', async (data, callback) => {
     if (!data) {
@@ -91,11 +119,36 @@ io.on("connection", async (socket) => {
       }],
     })
     let newAction = History.build({
-      gameid: '1',
+      gameid: gameId.gameid,
       type: 'action',
       history: data
     })
+    await newAction.save();
 
+    let isMine = doAction(data, gameId.gameid);
+
+    let listUsersInGame = await Tabs.findAll({
+      where: {
+        gameid: gameId.gameid
+      }
+    })
+    // let activeGamesList = await Games.findOne({
+    //   include: [{
+    //     model: Tabs,
+    //     required: true,
+    //     where: {
+    //       gameid: gameId
+    //     }
+    //   }]
+    // })
+    // let activeGamesList = await Games.findAll();
+
+    // let socketsList = Object.values(socketsMap);
+    listUsersInGame.forEach(item => {
+      socketsMap[item.tabid].emit('game/action', {dataTable: gamesMap[gameId.gameid], isMine})
+    })
+
+    // socket.emit('game/action', {dataTable: gamesMap[gameId.gameid], isMine});
   })
 });
 

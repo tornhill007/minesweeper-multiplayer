@@ -11,6 +11,7 @@ const SET_IS_MOUNTED = 'SET_IS_MOUNTED';
 const SET_IS_SOCKET = 'SET_IS_SOCKET';
 const SET_IS_CONNECTED = 'SET_IS_CONNECTED';
 const SET_IS_DISCONNECTED = 'SET_IS_DISCONNECTED';
+const SET_IS_RENDER = 'SET_IS_RENDER';
 
 let initialState = {
   socket: null,
@@ -23,7 +24,8 @@ let initialState = {
   isOneRendered: false,
   isSocketExist: false,
   isConnected: false,
-  isDisconnected: false
+  isDisconnected: false,
+  isRender: false
 };
 
 const authReducer = (state = initialState, action) => {
@@ -33,6 +35,13 @@ const authReducer = (state = initialState, action) => {
       return {
         ...state,
         socket: action.socket
+      };
+
+      case SET_IS_RENDER:
+      // console.log("SOCKET_ID_ACTION", action.socket.id)
+      return {
+        ...state,
+        isRender: action.isRender
       };
       case SET_IS_SOCKET:
       return {
@@ -182,6 +191,11 @@ return state;
 export const setSocket = (socket) => ({
   type: SET_SOCKET,
   socket
+});
+
+export const setIsRender = (isRender) => ({
+  type: SET_IS_RENDER,
+  isRender
 });
 
 export const setIsSocket = (isSocketExist) => ({

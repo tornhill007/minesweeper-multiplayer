@@ -25,7 +25,7 @@ const Users = db.define('users', {
 
   })
 
-
+Users.hasMany(Tabs, {foreignKey: 'userid', onDelete: "cascade"});
 // Users.hasMany(Tabs, {foreignKey: 'userid', onDelete: "cascade" });
 
 //

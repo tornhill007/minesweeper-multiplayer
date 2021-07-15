@@ -9,12 +9,14 @@ const SET_TABLE = 'SET_TABLE';
 const CHECK_CELL = 'CHECK_CELL';
 const FIND_MINE = 'FIND_MINE';
 const SET_GAME = 'SET_GAME';
+const SET_GAMES_LIST = 'SET_GAMES_LIST';
 
 
 let initialState = {
   gameInfo: null,
   tableTwoDimensional: [],
-  isGameOver: false
+  isGameOver: false,
+  gamesList: []
 };
 
 const gameReducer = (state = initialState, action) => {
@@ -23,6 +25,12 @@ const gameReducer = (state = initialState, action) => {
       return {
         ...state,
         tableTwoDimensional: action.game,
+
+      };
+      case SET_GAMES_LIST:
+      return {
+        ...state,
+        gamesList: action.gamesList,
       };
       case SET_GAME_INFO:
       return {
@@ -141,7 +149,8 @@ const gameReducer = (state = initialState, action) => {
   }
 };
 
-export const setGame = (game) => ({type: SET_GAME, game});
+export const setGame = ({game, isMine = undefined}) => ({type: SET_GAME, game, isMine});
+export const setGamesList = (gamesList) => ({type: SET_GAMES_LIST, gamesList});
 export const setGameInfo = (gameInfo) => ({type: SET_GAME_INFO, gameInfo});
 export const setTable = () => ({type: SET_TABLE});
 export const checkCell = (i, j) => ({type: CHECK_CELL, i, j});
