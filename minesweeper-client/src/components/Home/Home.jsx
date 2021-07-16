@@ -18,7 +18,7 @@ class Home extends React.Component {
   }
 
   render() {
-console.log("this.props.gamesList", this.props.gamesList)
+    console.log("this.props.gamesList", this.props.gamesList)
     return (
       <div>
         <div onClick={() => {
@@ -31,8 +31,14 @@ console.log("this.props.gamesList", this.props.gamesList)
           <span>LIST OF ACTIVE GAMES</span>
           <div>
             {this.props.gamesList.map(item => {
-              return <div onClick={() => {this.joinToGame(item.gameid)}}>
-                {item.gamename}
+              return <div onClick={() => {
+                this.joinToGame(item.gameid)
+              }}>
+                <span>Name: {item.gamename} </span>
+                <span>Field: {item.fieldsize} </span>
+                <span>Players: {this.props.usersInRoom[item.gameid]}/{item.maxplayers} </span>
+                <span>Mines: {item.amountofmines} </span>
+                <span>Live: Off </span>
               </div>
             })}
           </div>
@@ -44,7 +50,8 @@ console.log("this.props.gamesList", this.props.gamesList)
 
 const mapStateToProps = (state) => ({
   gamesList: state.gamePage.gamesList,
-  socket: state.socketPage.socket
+  socket: state.socketPage.socket,
+  usersInRoom: state.gamePage.usersInRoom
 })
 
 export default withRouter(connect(mapStateToProps, {

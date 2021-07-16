@@ -35,6 +35,10 @@ const Games = db.define('games', {
     gamename: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    owner: {
+      type: DataTypes.UUID,
+      allowNull: false
     }
   },
   {

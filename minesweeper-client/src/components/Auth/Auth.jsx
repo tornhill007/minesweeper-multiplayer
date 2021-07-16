@@ -5,8 +5,7 @@ import {generateUID} from '../../utils/generateUID'
 import {SocketContextProvider} from "../Context/SocketContextProvider";
 import {io} from "socket.io-client";
 import {setIsRender, setSocket} from "../../redux/reducers/socketReducer";
-import {setGame, setGamesList} from "../../redux/reducers/gameReducer";
-
+import {setGame, setGamesList, setUsersInRoom, setUsersListReadiness} from "../../redux/reducers/gameReducer";
 
 class Auth extends React.Component {
 
@@ -16,10 +15,6 @@ class Auth extends React.Component {
     this.state = {
       isRender: false
     }
-  }
-
-  componentDidMount() {
-
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -33,15 +28,18 @@ class Auth extends React.Component {
           loggeduser: this.props.token
         }
       });
+
       socket.on("connect", () => {
         console.log("sockett_ID", socket.id)
         this.props.setSocket(socket);
       });
+
       socket.on("game/new", (data) => {
         console.log("NEW_GAME", data)
         this.props.setGame({game: data.dataTable});
         this.props.history.push(`/game/${data.gameId}`)
       })
+
       socket.on("game/action", (data) => {
         console.log("new_ACTION", data)
         this.props.setGame({game: data.dataTable, isMine: data.isMine});
@@ -51,6 +49,18 @@ class Auth extends React.Component {
         console.log("new_list", data)
         this.props.setGamesList(data);
       })
+
+      socket.on("game/users", (data) => {
+        console.log("list_users_in_room", data)
+        this.props.setUsersInRoom(data);
+      })
+
+      socket.on("game/listReadiness", (data) => {
+        console.log("list_readiness", data)
+        this.props.setUsersListReadiness(data);
+      })
+
+
       this.props.setIsRender(true)
     }
   }
@@ -61,8 +71,6 @@ class Auth extends React.Component {
       let tabId = generateUID();
       window.sessionStorage.setItem("tabId", JSON.stringify(tabId))
     }
-
-
 
     if (!this.props.token) return <Redirect to={'/login'}/>
 
@@ -82,5 +90,7 @@ export default withRouter(connect(mapStateToProps, {
   setSocket,
   setGame,
   setIsRender,
-  setGamesList
+  setGamesList,
+  setUsersInRoom,
+  setUsersListReadiness
 })(Auth));

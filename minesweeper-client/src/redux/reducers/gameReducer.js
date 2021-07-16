@@ -10,13 +10,18 @@ const CHECK_CELL = 'CHECK_CELL';
 const FIND_MINE = 'FIND_MINE';
 const SET_GAME = 'SET_GAME';
 const SET_GAMES_LIST = 'SET_GAMES_LIST';
+const SET_USERS_IN_ROOM = 'SET_USERS_IN_ROOM';
+const SET_USERS_LIST_READINESS = 'SET_USERS_LIST_READINESS';
 
 
 let initialState = {
   gameInfo: null,
   tableTwoDimensional: [],
   isGameOver: false,
-  gamesList: []
+  gamesList: [],
+  usersInRoom: {},
+  usersInGame: [],
+  usersReadiness: []
 };
 
 const gameReducer = (state = initialState, action) => {
@@ -25,14 +30,27 @@ const gameReducer = (state = initialState, action) => {
       return {
         ...state,
         tableTwoDimensional: action.game,
-
       };
-      case SET_GAMES_LIST:
+    case SET_USERS_LIST_READINESS:
+      return {
+        ...state,
+        usersReadiness: action.data.listReadiness,
+      };
+    case SET_GAMES_LIST:
       return {
         ...state,
         gamesList: action.gamesList,
       };
-      case SET_GAME_INFO:
+    case SET_USERS_IN_ROOM:
+      let usersInRoom = JSON.parse(JSON.stringify(state.usersInRoom));
+      console.log("action.data1", action.data);
+      usersInRoom[action.data[0].gameid] = action.data.length
+      return {
+        ...state,
+        usersInRoom: usersInRoom,
+        usersInGame: action.data
+      };
+    case SET_GAME_INFO:
       return {
         ...state,
         gameInfo: action.gameInfo,
@@ -150,7 +168,13 @@ const gameReducer = (state = initialState, action) => {
 };
 
 export const setGame = ({game, isMine = undefined}) => ({type: SET_GAME, game, isMine});
+export const setUsersInRoom = (data) => ({type: SET_USERS_IN_ROOM, data});
+export const setUsersListReadiness = (data) => ({type: SET_USERS_LIST_READINESS, data});
+
+
 export const setGamesList = (gamesList) => ({type: SET_GAMES_LIST, gamesList});
+
+
 export const setGameInfo = (gameInfo) => ({type: SET_GAME_INFO, gameInfo});
 export const setTable = () => ({type: SET_TABLE});
 export const checkCell = (i, j) => ({type: CHECK_CELL, i, j});

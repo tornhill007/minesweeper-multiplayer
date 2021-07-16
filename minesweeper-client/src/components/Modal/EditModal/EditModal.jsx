@@ -44,10 +44,6 @@ class EditModal extends React.Component {
       console.log(['data'], data)
     })
     console.log("Form_Data", this.state);
-    // this.props.setGameInfoAndSetTable(this.state)
-    // this.props.setGameInfoAndSetTable(this.state)
-    // this.props.setGameInfo(this.state);
-    // this.props.history.push('/game')
   }
 
 
@@ -74,7 +70,10 @@ class EditModal extends React.Component {
           <input value={this.state.maxPlayers} onChange={this.onChangeMaxPlayers} placeholder={"max players (1-10)"}
                  type="text"/>
         </div>
-        <div onClick={() => {this.createGame()}}>Create game</div>
+        <div onClick={() => {
+          this.createGame()
+        }}>Create game
+        </div>
         <div className="modal-footer">
           <button type="button" className="btn btn-secondary" onClick={() => this.props.closeModal()}>Close</button>
         </div>
