@@ -38,7 +38,7 @@ class Home extends React.Component {
                 <span>Field: {item.fieldsize} </span>
                 <span>Players: {this.props.usersInRoom[item.gameid]}/{item.maxplayers} </span>
                 <span>Mines: {item.amountofmines} </span>
-                <span>Live: Off </span>
+                {item.isplaying ? <span>Live</span> : <span>Pending</span>}
               </div>
             })}
           </div>

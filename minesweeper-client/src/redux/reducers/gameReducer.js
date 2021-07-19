@@ -21,7 +21,8 @@ let initialState = {
   gamesList: [],
   usersInRoom: {},
   usersInGame: [],
-  usersReadiness: []
+  usersReadiness: [],
+  gameOwner: {}
 };
 
 const gameReducer = (state = initialState, action) => {
@@ -32,9 +33,19 @@ const gameReducer = (state = initialState, action) => {
         tableTwoDimensional: action.game,
       };
     case SET_USERS_LIST_READINESS:
+      let arrListReadiness = [];
+      let arrTabs = Object.keys(action.data.listReadiness);
+      arrTabs.forEach(item => {
+       let obj = {...action.data.listReadiness[item]};
+       console.log("obj", obj)
+       obj.tabid = item;
+        arrListReadiness.push(obj);
+      })
+      console.log("gameOwner", action.data.gameOwner)
       return {
         ...state,
-        usersReadiness: action.data.listReadiness,
+        usersReadiness: arrListReadiness,
+        gameOwner: action.data.gameOwner
       };
     case SET_GAMES_LIST:
       return {

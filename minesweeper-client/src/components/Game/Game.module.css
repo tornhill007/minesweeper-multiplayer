@@ -12,3 +12,15 @@
 .blownUpBackground {
     background-color: red;
 }
+
+.activeUser {
+    color: green;
+}
+
+.activeMove {
+    background-color: #2c536c;
+}
+
+.unclickableTable {
+    pointer-events: none
+}

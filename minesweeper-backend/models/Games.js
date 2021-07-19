@@ -28,6 +28,16 @@ const Games = db.define('games', {
       type: DataTypes.UUID,
       allowNull: false
     },
+    moveposition: {
+      type: DataTypes.UUID,
+      defaultValue: 0,
+      allowNull: false
+    },
+    isplaying: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false
+    },
     amountofmines: {
       type: DataTypes.UUID,
       allowNull: false

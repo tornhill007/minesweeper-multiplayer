@@ -38,6 +38,10 @@ class Game extends React.Component {
     })
   }
 
+  startGame = () => {
+    this.props.socket.emit("game/start", {gameId: this.props.match.params.gameId})
+  }
+
 
   render() {
     console.log("tableTwoDimensionalOPENED", this.props.gameInfo);
@@ -81,28 +85,34 @@ class Game extends React.Component {
         <tr key={i}> {entry} </tr>
       );
     });
-console.log("gamesList", this.props.gamesList)
-console.log("usersInGame", this.props.usersInGame)
+console.log("usersReadiness", this.props.usersReadiness)
+console.log("usersInGame", this.props.gameOwner)
+console.log("usersInGame", this.props.usersInRoom)
 
     let maxPlayers = this.props.gamesList.filter(item => {
       return item.gameid === this.props.match.params.gameId
     })
 
     console.log("maxPlayers", maxPlayers)
+    let isStarting = this.props.usersReadiness.find(item => {return !item.isReady})
+    let whoMove = this.props.usersReadiness.find(item => {return item.movePosition })
     return (
       <div>
 
         {/*<div onClick={() => {drawingMap(tableTwoDimensional)}}>DRAWING MAP</div>*/}
         {this.props.isGameOver && <div>GAME OVER</div>}
-        <table>
+        <table className={whoMove && whoMove.username != JSON.parse(localStorage.getItem('user')).userName && classes.unclickableTable}>
           {rows}
         </table>
-        <div>list players: {this.props.usersInGame.map(item => {
-          return <div>{item.tabid}</div>
+        <div>list players:
+          {/*<div>owner: {this.props.gameOwner && this.props.gameOwner.username}</div>*/}
+          {
+          this.props.usersReadiness.map(item => {
+          return <div className={`${item.isReady && classes.activeUser} ${item.movePosition && classes.activeMove}`}>{item.username}</div>
         })}</div>
         {maxPlayers[0] && <div>Players: {this.props.usersInRoom[this.props.match.params.gameId]}/{maxPlayers[0].maxplayers}</div>}
-        {!this.state.isReady ? <div onClick={() => {this.onReady()}}>Ready</div> : <div onClick={() => {this.onNotReady()}}>Not ready</div>}
-        {(maxPlayers[0] && maxPlayers[0].owner == JSON.parse(localStorage.getItem('user')).userId) && <div onClick={() => {}}>START GAME</div>}
+        {(this.props.gameOwner && this.props.gameOwner.username !== JSON.parse(localStorage.getItem('user')).userName) ? !this.state.isReady ? <div onClick={() => {this.onReady()}}>Ready</div> : <div onClick={() => {this.onNotReady()}}>Not ready</div> : ''}
+        {!isStarting ? (maxPlayers[0] && maxPlayers[0].owner == JSON.parse(localStorage.getItem('user')).userId) && <div onClick={() => {this.startGame()}}>START GAME</div> : ''}
       </div>
     );
   }
@@ -116,7 +126,8 @@ const mapStateToProps = (state) => ({
   gamesList: state.gamePage.gamesList,
   usersInRoom: state.gamePage.usersInRoom,
   usersInGame: state.gamePage.usersInGame,
-  usersReadiness: state.gamePage.usersReadiness
+  usersReadiness: state.gamePage.usersReadiness,
+  gameOwner: state.gamePage.gameOwner
 })
 
 export default withRouter(connect(mapStateToProps, {

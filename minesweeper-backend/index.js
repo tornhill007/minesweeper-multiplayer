@@ -14,6 +14,8 @@ const jwt = require("jsonwebtoken");
 const keys = require('./config/keys');
 const createGame = require('./helpers/createGame');
 const generateUID = require('./helpers/generateUID');
+const setPosition = require('./helpers/setPosition');
+const changeMove = require('./helpers/changeMove');
 const gamesMap = require('./common/gamesMap');
 const socketsMap = require('./common/socketsMap');
 const usersStateMap = require('./common/usersStateMap');
@@ -65,7 +67,7 @@ io.on("connection", async (socket) => {
       let dataTable = createGame(data.gameInfo);
       let gameId = generateUID();
       gamesMap[gameId] = dataTable;
-      socket.emit('game/new', {dataTable, gameId});
+      socket.emit('game/new', {dataTable: [], gameId});
       let newGame = Games.build({
         maxplayers: data.gameInfo.maxPlayers,
         fieldsize: data.gameInfo.fieldSize,
@@ -86,7 +88,6 @@ io.on("connection", async (socket) => {
 
       let activeGamesList = await Games.findAll();
 
-
       let socketsList = Object.values(socketsMap);
       console.log(socketsList);
       let listUsersInGame = await Tabs.findAll({
@@ -94,9 +95,24 @@ io.on("connection", async (socket) => {
           gameid: gameId
         }
       })
+      let gameOwner = await Users.findOne({
+        where: {
+          userid: newGame.owner
+        }
+      })
+
+      usersStateMap[gameId] = {
+        [socket.handshake.query.tabId]: {
+          isReady: true,
+          username: socket.user.username,
+          userid: socket.user.userid
+        }
+      };
+
       socketsList.forEach(item => {
         item.emit('game/list', activeGamesList);
         item.emit('game/users', listUsersInGame);
+        item.emit('game/listReadiness', {listReadiness: usersStateMap[gameId], gameOwner})
       })
     }
   )
@@ -109,12 +125,22 @@ io.on("connection", async (socket) => {
       }
     })
     await game.createTab({tabid: socket.handshake.query.tabId});
-    socket.emit('game/new', {dataTable, gameId: data.gameId});
+    socket.emit('game/new', {dataTable: [], gameId: data.gameId});
 
     if (!usersStateMap[data.gameId]) {
-      usersStateMap[data.gameId] = {[socket.handshake.query.tabId]: {isReady: false, username: socket.user.userName, userid: socket.user.userId}};
+      usersStateMap[data.gameId] = {
+        [socket.handshake.query.tabId]: {
+          isReady: false,
+          username: socket.user.username,
+          userid: socket.user.userid
+        }
+      };
     }
-    usersStateMap[data.gameId][socket.handshake.query.tabId] = {isReady: false, username: socket.user.username, userid: socket.user.userid};
+    usersStateMap[data.gameId][socket.handshake.query.tabId] = {
+      isReady: false,
+      username: socket.user.username,
+      userid: socket.user.userid
+    };
     let socketsList = Object.values(socketsMap);
     let listUsersInGame = await Tabs.findAll({
       where: {
@@ -124,13 +150,22 @@ io.on("connection", async (socket) => {
     socketsList.forEach(item => {
       item.emit('game/users', listUsersInGame);
     })
-
+    let gameOwner = await Users.findOne({
+      where: {
+        userid: game.owner
+      }
+    })
+    listUsersInGame.forEach(item => {
+      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId], gameOwner})
+    })
   })
 
   socket.on('game/action', async (data, callback) => {
     if (!data) {
       return callback('Incorrect data');
     }
+
+
     let gameId = await Games.findOne({
       include: [{
         model: Tabs,
@@ -140,6 +175,17 @@ io.on("connection", async (socket) => {
         }
       }],
     })
+
+    let game = await Games.findOne({
+      where: {
+        gameid: gameId.gameid
+      }
+    })
+
+    if(data.movePosition !== game.moveposition) {
+      return;
+    }
+
     let newAction = History.build({
       gameid: gameId.gameid,
       type: 'action',
@@ -153,8 +199,24 @@ io.on("connection", async (socket) => {
       }
     })
 
+
+    let gameOwner = await Users.findOne({
+      where: {
+        userid: game.owner
+      }
+    })
+    let arr = Object.keys(usersStateMap[gameId.gameid]);
+    if (arr.length == +game.moveposition + 1) {
+      game.moveposition = 0;
+    } else {
+      game.moveposition = +game.moveposition + 1;
+    }
+    await game.save();
+    await changeMove(gameId.gameid);
+
     listUsersInGame.forEach(item => {
       socketsMap[item.tabid].emit('game/action', {dataTable: gamesMap[gameId.gameid], isMine})
+      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameId.gameid], gameOwner})
     })
   })
 
@@ -166,31 +228,58 @@ io.on("connection", async (socket) => {
         gameid: data.gameId
       }
     })
-
-    let tabsInGame = listUsersInGame.map(user => {
-      return user.tabid
+    let game = await Games.findOne({
+      where: {
+        gameid: data.gameId
+      }
     })
-
-    // let users = await Users.findAll({
-    //   include: [{
-    //     model: Tabs,
-    //     required: true,
-    //     where: {
-    //       tabid: tabsInGame
-    //     }
-    //   }]
-    // })
-
+    let gameOwner = await Users.findOne({
+      where: {
+        userid: game.owner
+      }
+    })
     listUsersInGame.forEach(item => {
-
-      // let user = users.find(user => {
-      //   return user.tabs[0].tabid === item.tabid
-      // })
-
-      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId] })
+      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId], gameOwner})
     })
 
     console.log(1)
+  })
+
+  socket.on('game/start', async (data, callback) => {
+    let dataTable = gamesMap[data.gameId];
+    let game = await Games.findOne({
+      where: {
+        gameid: data.gameId
+      }
+    })
+    game.isplaying = true;
+    await game.save();
+    let listUsersInGame = await Tabs.findAll({
+      where: {
+        gameid: data.gameId
+      }
+    })
+
+    let activeGamesList = await Games.findAll();
+    let socketsList = Object.values(socketsMap);
+    socketsList.forEach(item => {
+      item.emit('game/list', activeGamesList);
+    })
+
+    let gameOwner = await Users.findOne({
+      where: {
+        userid: game.owner
+      }
+    })
+
+    await setPosition(data.gameId);
+
+    listUsersInGame.forEach(item => {
+      socketsMap[item.tabid].emit('game/new', {dataTable, gameId: data.gameId});
+      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId], gameOwner})
+    })
+
+
   })
 });
 
