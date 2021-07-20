@@ -8,6 +8,7 @@ const auth = require('./routes/auth');
 const Users = require('./models/Users');
 const Games = require('./models/Games');
 const History = require('./models/History');
+const Moves = require('./models/Moves');
 const Tabs = require('./models/Tabs');
 const usersRoute = require('./routes/users');
 const jwt = require("jsonwebtoken");
@@ -165,7 +166,6 @@ io.on("connection", async (socket) => {
       return callback('Incorrect data');
     }
 
-
     let gameId = await Games.findOne({
       include: [{
         model: Tabs,
@@ -176,15 +176,25 @@ io.on("connection", async (socket) => {
       }],
     })
 
+    let tabMove = await Moves.findOne({
+      where: {
+        gameid: gameId.gameid
+      }
+    })
+
+    if (tabMove.tabid !== socket.handshake.query.tabId) {
+      return;
+    }
+
     let game = await Games.findOne({
       where: {
         gameid: gameId.gameid
       }
     })
 
-    if(data.movePosition !== game.moveposition) {
-      return;
-    }
+    // if(data.movePosition !== game.moveposition) {
+    //   return;
+    // }
 
     let newAction = History.build({
       gameid: gameId.gameid,
@@ -193,27 +203,38 @@ io.on("connection", async (socket) => {
     })
     await newAction.save();
     let isMine = doAction(data, gameId.gameid);
+
     let listUsersInGame = await Tabs.findAll({
       where: {
         gameid: gameId.gameid
       }
     })
 
-
     let gameOwner = await Users.findOne({
       where: {
         userid: game.owner
       }
     })
+    if (isMine) {
+      delete usersStateMap[gameId.gameid][socket.handshake.query.tabId]
+      let arr = Object.keys(usersStateMap[gameId.gameid])
+      for(let i = 0; i < arr.length; i++ ) {
+        usersStateMap[gameId.gameid][arr[i]].position = i;
+      }
+    }
     let arr = Object.keys(usersStateMap[gameId.gameid]);
     if (arr.length == +game.moveposition + 1) {
       game.moveposition = 0;
     } else {
       game.moveposition = +game.moveposition + 1;
     }
-    await game.save();
-    await changeMove(gameId.gameid);
 
+    await game.save();
+
+    await changeMove(gameId.gameid);
+    if (isMine) {
+      delete usersStateMap[gameId.gameid][socket.handshake.query.tabId]
+    }
     listUsersInGame.forEach(item => {
       socketsMap[item.tabid].emit('game/action', {dataTable: gamesMap[gameId.gameid], isMine})
       socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameId.gameid], gameOwner})

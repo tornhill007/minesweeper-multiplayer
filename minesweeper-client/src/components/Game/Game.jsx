@@ -42,7 +42,6 @@ class Game extends React.Component {
     this.props.socket.emit("game/start", {gameId: this.props.match.params.gameId})
   }
 
-
   render() {
     console.log("tableTwoDimensionalOPENED", this.props.gameInfo);
     console.log("tableTwoDimensionalOPENED1", this.props);
@@ -64,9 +63,6 @@ class Game extends React.Component {
     const findMine = (i, j) => {
       this.props.findMine(i, j)
     }
-
-
-
 
     let rows = this.props.tableTwoDimensional.map(function (item, i) {
       let entry = item.map(function (element, j) {
@@ -101,7 +97,7 @@ console.log("usersInGame", this.props.usersInRoom)
 
         {/*<div onClick={() => {drawingMap(tableTwoDimensional)}}>DRAWING MAP</div>*/}
         {this.props.isGameOver && <div>GAME OVER</div>}
-        <table className={whoMove && whoMove.username != JSON.parse(localStorage.getItem('user')).userName && classes.unclickableTable}>
+        <table>
           {rows}
         </table>
         <div>list players:
