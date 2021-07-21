@@ -5,11 +5,13 @@ const httpServer = require("http").createServer(app);
 const passport = require("passport");
 const sequelize = require('./config/database');
 const auth = require('./routes/auth');
+const games = require('./routes/games');
 const Users = require('./models/Users');
 const Games = require('./models/Games');
 const History = require('./models/History');
 const Moves = require('./models/Moves');
 const Tabs = require('./models/Tabs');
+const UserInfo = require('./models/UserInfo');
 const usersRoute = require('./routes/users');
 const jwt = require("jsonwebtoken");
 const keys = require('./config/keys');
@@ -33,6 +35,7 @@ sequelize.authenticate().then(() => {
 })
 
 app.use(auth);
+app.use(games);
 app.use(usersRoute);
 // app.use(history);
 
@@ -161,6 +164,108 @@ io.on("connection", async (socket) => {
     })
   })
 
+  socket.on('game/surrender', async (data, callback) => {
+
+    socket.emit("game/surrendered", {surrendered: true});
+
+    let gameId = await Games.findOne({
+      include: [{
+        model: Tabs,
+        required: true,
+        where: {
+          tabid: socket.handshake.query.tabId
+        }
+      }],
+    })
+
+    let game = await Games.findOne({
+      where: {
+        gameid: gameId.gameid
+      }
+    })
+
+    let gameOwner = await Users.findOne({
+      where: {
+        userid: game.owner
+      }
+    })
+    delete usersStateMap[gameId.gameid][socket.handshake.query.tabId]
+    let arr = Object.keys(usersStateMap[gameId.gameid])
+    for (let i = 0; i < arr.length; i++) {
+      usersStateMap[gameId.gameid][arr[i]].position = i;
+    }
+    game.moveposition = +game.moveposition - 1;
+    let userInfo = await UserInfo.findOne({
+      where: {
+        userid: socket.user.userid
+      }
+    })
+    if (userInfo) {
+      userInfo.lossamount = +userInfo.lossamount + 1;
+    } else {
+      userInfo = UserInfo.build({
+        userid: +socket.user.userid,
+        lossamount: 1,
+        winamount: 0
+      })
+    }
+    await userInfo.save();
+    socket.emit("game/blownUp", {blownUp: true})
+
+    if (arr.length === 1) {
+
+      let user = await Users.findOne({
+        include: [{
+          model: Tabs,
+          required: true,
+          where: {
+            tabid: arr[0]
+          }
+        }]
+      })
+
+      let win = await UserInfo.findOne({
+        where: {
+          userid: user.userid
+        }
+      })
+      if (win) {
+        win.winamount = +win.winamount + 1;
+      } else {
+        win = UserInfo.build({
+          userid: user.userid,
+          winamount: 1,
+          lossamount: 0
+        })
+      }
+      await win.save();
+      socketsMap[arr[0]].emit("game/surrendered", {surrendered: true});
+      game.isplaying = false;
+      socketsMap[arr[0]].emit("game/win", {win: true})
+    }
+
+    let listUsersInGame = await Tabs.findAll({
+      where: {
+        gameid: gameId.gameid
+      }
+    })
+
+    // let arr1 = Object.keys(usersStateMap[gameId.gameid]);
+    if (arr.length <= +game.moveposition + 1) {
+      game.moveposition = 0;
+    } else {
+      game.moveposition = +game.moveposition + 1;
+    }
+
+    await game.save();
+
+    await changeMove(gameId.gameid);
+
+    listUsersInGame.forEach(item => {
+      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameId.gameid], gameOwner})
+    })
+  })
+
   socket.on('game/action', async (data, callback) => {
     if (!data) {
       return callback('Incorrect data');
@@ -176,6 +281,16 @@ io.on("connection", async (socket) => {
       }],
     })
 
+    let game = await Games.findOne({
+      where: {
+        gameid: gameId.gameid
+      }
+    })
+
+    if (!game.isplaying) {
+      return;
+    }
+
     let tabMove = await Moves.findOne({
       where: {
         gameid: gameId.gameid
@@ -186,21 +301,13 @@ io.on("connection", async (socket) => {
       return;
     }
 
-    let game = await Games.findOne({
-      where: {
-        gameid: gameId.gameid
-      }
-    })
-
-    // if(data.movePosition !== game.moveposition) {
-    //   return;
-    // }
 
     let newAction = History.build({
       gameid: gameId.gameid,
       type: 'action',
       history: data
     })
+
     await newAction.save();
     let isMine = doAction(data, gameId.gameid);
 
@@ -215,15 +322,69 @@ io.on("connection", async (socket) => {
         userid: game.owner
       }
     })
+
+    //click on Mine
+
     if (isMine) {
       delete usersStateMap[gameId.gameid][socket.handshake.query.tabId]
+      socket.emit("game/surrendered", {surrendered: true});
       let arr = Object.keys(usersStateMap[gameId.gameid])
-      for(let i = 0; i < arr.length; i++ ) {
+      for (let i = 0; i < arr.length; i++) {
         usersStateMap[gameId.gameid][arr[i]].position = i;
       }
+      game.moveposition = +game.moveposition - 1;
+      let userInfo = await UserInfo.findOne({
+        where: {
+          userid: socket.user.userid
+        }
+      })
+      if (userInfo) {
+        userInfo.lossamount = +userInfo.lossamount + 1;
+      } else {
+        userInfo = UserInfo.build({
+          userid: +socket.user.userid,
+          lossamount: 1,
+          winamount: 0
+        })
+      }
+      await userInfo.save();
+      socket.emit("game/blownUp", {blownUp: true})
+
+      if (arr.length === 1) {
+
+        let user = await Users.findOne({
+          include: [{
+            model: Tabs,
+            required: true,
+            where: {
+              tabid: arr[0]
+            }
+          }]
+        })
+
+        let win = await UserInfo.findOne({
+          where: {
+            userid: user.userid
+          }
+        })
+        if (win) {
+          win.winamount = +win.winamount + 1;
+        } else {
+          win = UserInfo.build({
+            userid: user.userid,
+            winamount: 1,
+            lossamount: 0
+          })
+        }
+        socketsMap[arr[0]].emit("game/surrendered", {surrendered: true});
+        await win.save();
+        game.isplaying = false;
+        socketsMap[arr[0]].emit("game/win", {win: true})
+      }
     }
+
     let arr = Object.keys(usersStateMap[gameId.gameid]);
-    if (arr.length == +game.moveposition + 1) {
+    if (arr.length <= +game.moveposition + 1) {
       game.moveposition = 0;
     } else {
       game.moveposition = +game.moveposition + 1;
@@ -262,8 +423,7 @@ io.on("connection", async (socket) => {
     listUsersInGame.forEach(item => {
       socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId], gameOwner})
     })
-
-    console.log(1)
+    console.log(1);
   })
 
   socket.on('game/start', async (data, callback) => {
@@ -298,6 +458,7 @@ io.on("connection", async (socket) => {
     listUsersInGame.forEach(item => {
       socketsMap[item.tabid].emit('game/new', {dataTable, gameId: data.gameId});
       socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId], gameOwner})
+      socketsMap[item.tabid].emit('game/info', {game})
     })
 
 

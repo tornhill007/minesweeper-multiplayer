@@ -3,6 +3,9 @@ import classes from "../../components/Game/Game.module.css";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBomb} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
+import {authAPI, gameApi} from "../../api/api";
+import {reset} from "redux-form";
+import {setAuthUserData} from "./authReducer";
 
 const SET_GAME_INFO = 'SET_GAME_INFO';
 const SET_TABLE = 'SET_TABLE';
@@ -12,6 +15,10 @@ const SET_GAME = 'SET_GAME';
 const SET_GAMES_LIST = 'SET_GAMES_LIST';
 const SET_USERS_IN_ROOM = 'SET_USERS_IN_ROOM';
 const SET_USERS_LIST_READINESS = 'SET_USERS_LIST_READINESS';
+const SET_GAME_OVER = 'SET_GAME_OVER';
+const SET_WIN = 'SET_WIN';
+const SET_INFORMATION_GAME = 'SET_INFORMATION_GAME';
+const SET_SURRENDERED = 'SET_SURRENDERED';
 
 
 let initialState = {
@@ -22,7 +29,10 @@ let initialState = {
   usersInRoom: {},
   usersInGame: [],
   usersReadiness: [],
-  gameOwner: {}
+  gameOwner: {},
+  win: false,
+  informationGame: false,
+  surrendered: false
 };
 
 const gameReducer = (state = initialState, action) => {
@@ -31,6 +41,11 @@ const gameReducer = (state = initialState, action) => {
       return {
         ...state,
         tableTwoDimensional: action.game,
+      };
+      case SET_SURRENDERED:
+      return {
+        ...state,
+        surrendered: action.surrendered,
       };
     case SET_USERS_LIST_READINESS:
       let arrListReadiness = [];
@@ -51,6 +66,21 @@ const gameReducer = (state = initialState, action) => {
       return {
         ...state,
         gamesList: action.gamesList,
+      };
+      case SET_INFORMATION_GAME:
+      return {
+        ...state,
+        informationGame: action.gameInfo,
+      };
+      case SET_GAME_OVER:
+      return {
+        ...state,
+        isGameOver: action.data.blownUp,
+      };
+      case SET_WIN:
+      return {
+        ...state,
+        win: action.data.win,
       };
     case SET_USERS_IN_ROOM:
       let usersInRoom = JSON.parse(JSON.stringify(state.usersInRoom));
@@ -181,6 +211,8 @@ const gameReducer = (state = initialState, action) => {
 export const setGame = ({game, isMine = undefined}) => ({type: SET_GAME, game, isMine});
 export const setUsersInRoom = (data) => ({type: SET_USERS_IN_ROOM, data});
 export const setUsersListReadiness = (data) => ({type: SET_USERS_LIST_READINESS, data});
+export const setGameOver = (data) => ({type: SET_GAME_OVER, data});
+export const setWin = (data) => ({type: SET_WIN, data});
 
 
 export const setGamesList = (gamesList) => ({type: SET_GAMES_LIST, gamesList});
@@ -188,10 +220,32 @@ export const setGamesList = (gamesList) => ({type: SET_GAMES_LIST, gamesList});
 
 export const setGameInfo = (gameInfo) => ({type: SET_GAME_INFO, gameInfo});
 export const setTable = () => ({type: SET_TABLE});
+export const setInformationGame = (gameInfo) => ({type: SET_INFORMATION_GAME, gameInfo});
 export const checkCell = (i, j) => ({type: CHECK_CELL, i, j});
 export const findMine = (i, j) => ({type: FIND_MINE, i, j});
+export const setSurrendered = (surrendered) => ({type: SET_SURRENDERED, surrendered});
 export const setGameInfoAndSetTable = (gameInfo) => async (dispatch) => {
   dispatch(setGameInfo(gameInfo));
   dispatch(setTable());
+};
+export const getInfoGame = (gameId) => async (dispatch) => {
+
+  try {
+    let response = await gameApi.getInformationGame(gameId);
+    console.log("responseresponse", response);
+    if (response.statusText === 'OK') {
+      dispatch(setInformationGame(response.data));
+    }
+    else {
+      let message = response.data.messages.length > 0 ? response.data.messages[0] : "Some error";
+    }
+  }
+  catch (err) {
+    alert(err.response.data.message)
+    console.log("err", err.response.data.message);
+  }
+
+
+
 };
 export default gameReducer;

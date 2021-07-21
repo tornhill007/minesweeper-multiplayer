@@ -5,7 +5,13 @@ import {generateUID} from '../../utils/generateUID'
 import {SocketContextProvider} from "../Context/SocketContextProvider";
 import {io} from "socket.io-client";
 import {setIsRender, setSocket} from "../../redux/reducers/socketReducer";
-import {setGame, setGamesList, setUsersInRoom, setUsersListReadiness} from "../../redux/reducers/gameReducer";
+import {
+  setGame,
+  setGameOver,
+  setGamesList, setInformationGame, setSurrendered,
+  setUsersInRoom,
+  setUsersListReadiness, setWin
+} from "../../redux/reducers/gameReducer";
 
 class Auth extends React.Component {
 
@@ -60,6 +66,26 @@ class Auth extends React.Component {
         this.props.setUsersListReadiness(data);
       })
 
+      socket.on("game/win", (data) => {
+        console.log("game/win", data)
+        this.props.setWin(data);
+      })
+
+      socket.on("game/blownUp", (data) => {
+        console.log("blownUp", data)
+        this.props.setGameOver(data);
+      })
+
+      socket.on("game/info", (data) => {
+        console.log("information111", data)
+        this.props.setInformationGame(data.game);
+      })
+
+      socket.on("game/surrendered", (data) => {
+        console.log("surrendered", data)
+        this.props.setSurrendered(data.surrendered);
+      })
+
 
       this.props.setIsRender(true)
     }
@@ -92,5 +118,9 @@ export default withRouter(connect(mapStateToProps, {
   setIsRender,
   setGamesList,
   setUsersInRoom,
-  setUsersListReadiness
+  setUsersListReadiness,
+  setGameOver,
+  setWin,
+  setInformationGame,
+  setSurrendered
 })(Auth));

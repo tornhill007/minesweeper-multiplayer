@@ -29,9 +29,9 @@ export const historyApi = {
 };
 
 export const gameApi = {
-  // getRoomHistory(roomId) {
-  //   return instance.post(`history/${roomId}`,)
-  // },
+  getInformationGame(gameId) {
+    return instance.get(`game/${gameId}`,)
+  },
 };
 
 export const authAPI = {

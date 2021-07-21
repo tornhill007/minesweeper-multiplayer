@@ -5,7 +5,7 @@ import classes from './Game.module.css';
 import {createMines} from "../../utils/createMines";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBomb} from "@fortawesome/free-solid-svg-icons";
-import {checkCell, findMine} from "../../redux/reducers/gameReducer";
+import {checkCell, findMine, getInfoGame} from "../../redux/reducers/gameReducer";
 
 
 class Game extends React.Component {
@@ -40,6 +40,12 @@ class Game extends React.Component {
 
   startGame = () => {
     this.props.socket.emit("game/start", {gameId: this.props.match.params.gameId})
+    this.props.getInfoGame(this.props.match.params.gameId);
+  }
+
+  onSurrender = () => {
+    this.props.socket.emit("game/surrender", {gameId: this.props.match.params.gameId})
+    // this.props.getInfoGame(this.props.match.params.gameId);
   }
 
   render() {
@@ -84,6 +90,7 @@ class Game extends React.Component {
 console.log("usersReadiness", this.props.usersReadiness)
 console.log("usersInGame", this.props.gameOwner)
 console.log("usersInGame", this.props.usersInRoom)
+console.log("informationGame", this.props.informationGame)
 
     let maxPlayers = this.props.gamesList.filter(item => {
       return item.gameid === this.props.match.params.gameId
@@ -97,9 +104,11 @@ console.log("usersInGame", this.props.usersInRoom)
 
         {/*<div onClick={() => {drawingMap(tableTwoDimensional)}}>DRAWING MAP</div>*/}
         {this.props.isGameOver && <div>GAME OVER</div>}
+        {this.props.win && <div>YOU ARE WINNER</div>}
         <table>
           {rows}
         </table>
+        {!this.props.surrendered && this.props.informationGame.isplaying && <div onClick={() => {this.onSurrender()}}>Surrender</div>}
         <div>list players:
           {/*<div>owner: {this.props.gameOwner && this.props.gameOwner.username}</div>*/}
           {
@@ -107,8 +116,8 @@ console.log("usersInGame", this.props.usersInRoom)
           return <div className={`${item.isReady && classes.activeUser} ${item.movePosition && classes.activeMove}`}>{item.username}</div>
         })}</div>
         {maxPlayers[0] && <div>Players: {this.props.usersInRoom[this.props.match.params.gameId]}/{maxPlayers[0].maxplayers}</div>}
-        {(this.props.gameOwner && this.props.gameOwner.username !== JSON.parse(localStorage.getItem('user')).userName) ? !this.state.isReady ? <div onClick={() => {this.onReady()}}>Ready</div> : <div onClick={() => {this.onNotReady()}}>Not ready</div> : ''}
-        {!isStarting ? (maxPlayers[0] && maxPlayers[0].owner == JSON.parse(localStorage.getItem('user')).userId) && <div onClick={() => {this.startGame()}}>START GAME</div> : ''}
+        {this.props.informationGame.isplaying ? '' : (this.props.gameOwner && this.props.gameOwner.username !== JSON.parse(localStorage.getItem('user')).userName) ? !this.state.isReady ? <div onClick={() => {this.onReady()}}>Ready</div> : <div onClick={() => {this.onNotReady()}}>Not ready</div> : ''}
+        {!this.props.informationGame.isplaying && !isStarting ? (maxPlayers[0] && maxPlayers[0].owner == JSON.parse(localStorage.getItem('user')).userId) && <div onClick={() => {this.startGame()}}>START GAME</div> : ''}
       </div>
     );
   }
@@ -123,9 +132,12 @@ const mapStateToProps = (state) => ({
   usersInRoom: state.gamePage.usersInRoom,
   usersInGame: state.gamePage.usersInGame,
   usersReadiness: state.gamePage.usersReadiness,
-  gameOwner: state.gamePage.gameOwner
+  gameOwner: state.gamePage.gameOwner,
+  win: state.gamePage.win,
+  informationGame: state.gamePage.informationGame,
+  surrendered: state.gamePage.surrendered,
 })
 
 export default withRouter(connect(mapStateToProps, {
-  checkCell, findMine
+  checkCell, findMine, getInfoGame
 })(Game));
