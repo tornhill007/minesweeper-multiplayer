@@ -48,8 +48,13 @@ class Game extends React.Component {
     // this.props.getInfoGame(this.props.match.params.gameId);
   }
 
+  onShowHistory = (action) => {
+    this.props.socket.emit("game/showHistory", {action})
+    // this.props.getInfoGame(this.props.match.params.gameId);
+  }
+
   render() {
-    console.log("tableTwoDimensionalOPENED", this.props.gameInfo);
+    console.log("listLogs", this.props.listLogs);
     console.log("tableTwoDimensionalOPENED1", this.props);
     console.log("tableTwoDimensionalOPENED", this.props.tableTwoDimensional);
 
@@ -101,7 +106,9 @@ console.log("informationGame", this.props.informationGame)
     let whoMove = this.props.usersReadiness.find(item => {return item.movePosition })
     return (
       <div>
-
+        {this.props.listLogs.map(item => {
+          return <div onClick={() => {this.onShowHistory(item.history)}} className={classes.itemHistory}>i: {item.history.i}; j: {item.history.j}</div>
+        })}
         {/*<div onClick={() => {drawingMap(tableTwoDimensional)}}>DRAWING MAP</div>*/}
         {this.props.isGameOver && <div>GAME OVER</div>}
         {this.props.win && <div>YOU ARE WINNER</div>}
@@ -139,6 +146,7 @@ const mapStateToProps = (state) => ({
   informationGame: state.gamePage.informationGame,
   surrendered: state.gamePage.surrendered,
   listViewers: state.gamePage.listViewers,
+  listLogs: state.gamePage.listLogs,
 })
 
 export default withRouter(connect(mapStateToProps, {

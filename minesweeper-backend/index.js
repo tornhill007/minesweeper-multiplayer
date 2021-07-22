@@ -24,6 +24,8 @@ const gamesMap = require('./common/gamesMap');
 const socketsMap = require('./common/socketsMap');
 const usersStateMap = require('./common/usersStateMap');
 const doAction = require('./helpers/doAction');
+const {Sequelize} = require('sequelize');
+const Op = Sequelize.Op;
 
 //Test DB
 app.use(cors());
@@ -210,7 +212,35 @@ io.on("connection", async (socket) => {
       socketsMap[item.tabid].emit('game/listViewers', {listViewers: usersTabs})
     })
 
+  })
 
+  socket.on('game/showHistory', async (data, callback) => {
+
+    let gameId = await Games.findOne({
+      include: [{
+        model: Tabs,
+        required: true,
+        where: {
+          tabid: socket.handshake.query.tabId
+        }
+      }],
+    })
+
+    let actionTime = await History.findOne({
+      where: {
+        history: data.action
+      }
+    })
+
+    let history = await History.findAll({
+      where: {
+        gameid: gameId.gameid,
+        createdat: {
+          [Op.lte]: actionTime.createdat
+        }
+      }
+    })
+    console.log(data.action);
   })
 
   socket.on('game/surrender', async (data, callback) => {
@@ -386,7 +416,6 @@ io.on("connection", async (socket) => {
       return;
     }
 
-
     let newAction = History.build({
       gameid: gameId.gameid,
       type: 'action',
@@ -394,6 +423,7 @@ io.on("connection", async (socket) => {
     })
 
     await newAction.save();
+
     let isMine = doAction(data, gameId.gameid);
 
     let listUsersInGame = await Tabs.findAll({
@@ -518,16 +548,26 @@ io.on("connection", async (socket) => {
       }]
     })
 
+    let history = await History.findAll({
+      where: {
+        type: 'action',
+        gameid: gameId.gameid
+      }
+    })
+
+
     listUsersInGame.forEach(item => {
       socketsMap[item.tabid].emit('game/listViewers', {listViewers: usersTabs})
       socketsMap[item.tabid].emit('game/action', {dataTable: gamesMap[gameId.gameid], isMine})
       socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameId.gameid], gameOwner})
+      socketsMap[item.tabid].emit('game/listLogs', {history})
     })
 
     viewers.forEach(item => {
       socketsMap[item.tabid].emit('game/listViewers', {listViewers: usersTabs})
       socketsMap[item.tabid].emit('game/action', {dataTable: gamesMap[gameId.gameid], isMine})
       socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameId.gameid], gameOwner})
+      socketsMap[item.tabid].emit('game/listLogs', {history})
     })
 
   })

@@ -24,3 +24,11 @@
 .unclickableTable {
     pointer-events: none
 }
+
+.itemHistory {
+    cursor: pointer;
+}
+
+.itemHistory:hover {
+    color: #2c536c;
+}

@@ -8,7 +8,7 @@ import {setIsRender, setSocket} from "../../redux/reducers/socketReducer";
 import {
   setGame,
   setGameOver,
-  setGamesList, setInformationGame, setListViewers, setSurrendered,
+  setGamesList, setInformationGame, setListLogs, setListViewers, setSurrendered,
   setUsersInRoom,
   setUsersListReadiness, setWin
 } from "../../redux/reducers/gameReducer";
@@ -91,6 +91,11 @@ class Auth extends React.Component {
         this.props.setListViewers(data.listViewers);
       })
 
+      socket.on("game/listLogs", (data) => {
+        console.log("listViewers", data)
+        this.props.setListLogs(data.history);
+      })
+
 
       this.props.setIsRender(true)
     }
@@ -128,5 +133,6 @@ export default withRouter(connect(mapStateToProps, {
   setWin,
   setInformationGame,
   setSurrendered,
-  setListViewers
+  setListViewers,
+  setListLogs
 })(Auth));
