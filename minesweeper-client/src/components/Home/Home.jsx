@@ -17,6 +17,12 @@ class Home extends React.Component {
     })
   }
 
+  joinToGameAsViewer = (gameId) => {
+    this.props.socket.emit('game/join', {gameId, isViewer: true}, (data) => {
+      console.log(['data'], data)
+    })
+  }
+
   render() {
     console.log("this.props.gamesList", this.props.gamesList)
     return (
@@ -31,7 +37,7 @@ class Home extends React.Component {
           <span>LIST OF ACTIVE GAMES</span>
           <div>
             {this.props.gamesList.map(item => {
-              return <div onClick={() => {
+              return <div><div onClick={() => {
                 this.joinToGame(item.gameid)
               }}>
                 <span>Name: {item.gamename} </span>
@@ -39,6 +45,10 @@ class Home extends React.Component {
                 <span>Players: {this.props.usersInRoom[item.gameid]}/{item.maxplayers} </span>
                 <span>Mines: {item.amountofmines} </span>
                 {item.isplaying ? <span>Live</span> : <span>Pending</span>}
+              </div>
+                <div onClick={() => {
+                  this.joinToGameAsViewer(item.gameid)
+                }}>Join as Viewer</div>
               </div>
             })}
           </div>

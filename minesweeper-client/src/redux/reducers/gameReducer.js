@@ -19,6 +19,7 @@ const SET_GAME_OVER = 'SET_GAME_OVER';
 const SET_WIN = 'SET_WIN';
 const SET_INFORMATION_GAME = 'SET_INFORMATION_GAME';
 const SET_SURRENDERED = 'SET_SURRENDERED';
+const SET_LIST_VIEWERS = 'SET_LIST_VIEWERS';
 
 
 let initialState = {
@@ -32,7 +33,8 @@ let initialState = {
   gameOwner: {},
   win: false,
   informationGame: false,
-  surrendered: false
+  surrendered: false,
+  listViewers: []
 };
 
 const gameReducer = (state = initialState, action) => {
@@ -46,6 +48,11 @@ const gameReducer = (state = initialState, action) => {
       return {
         ...state,
         surrendered: action.surrendered,
+      };
+      case SET_LIST_VIEWERS:
+      return {
+        ...state,
+        listViewers: action.listViewers,
       };
     case SET_USERS_LIST_READINESS:
       let arrListReadiness = [];
@@ -213,6 +220,7 @@ export const setUsersInRoom = (data) => ({type: SET_USERS_IN_ROOM, data});
 export const setUsersListReadiness = (data) => ({type: SET_USERS_LIST_READINESS, data});
 export const setGameOver = (data) => ({type: SET_GAME_OVER, data});
 export const setWin = (data) => ({type: SET_WIN, data});
+export const setListViewers = (listViewers) => ({type: SET_LIST_VIEWERS, listViewers});
 
 
 export const setGamesList = (gamesList) => ({type: SET_GAMES_LIST, gamesList});

@@ -1,6 +1,7 @@
 const {Sequelize, DataTypes} = require('sequelize');
 const db = require('../config/database');
 const Tabs = require('../models/Tabs');
+const Viewers = require('../models/Viewers');
 
 // CREATE TABLE games(
 //   id serial NOT NULL PRIMARY KEY,
@@ -59,6 +60,7 @@ const Games = db.define('games', {
   })
 
 Games.hasMany(Tabs, {foreignKey: 'gameid', onDelete: "cascade"});
+Games.hasMany(Viewers, {foreignKey: 'gameid', onDelete: "cascade"});
 // Rooms.getRoomIncludeTabs = (tabid) => {
 //   return this.findOne({
 //     include: [{
