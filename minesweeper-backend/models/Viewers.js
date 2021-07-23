@@ -15,6 +15,12 @@ const Viewers = db.define('viewers', {
     },
     gameid: {
       type: DataTypes.STRING,
+      allowNull: false
+    },
+    islive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false
     }
   },
   {
