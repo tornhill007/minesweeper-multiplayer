@@ -16,14 +16,25 @@ const History = db.define('history', {
       type: DataTypes.STRING,
       allowNull: false
     },
+    userid: {
+      type: DataTypes.UUID,
+      allowNull: false
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    amountofmines: {
+      type: DataTypes.UUID,
+    },
     history: {
       type: DataTypes.JSON,
       allowNull: false
     },
   },
   {
-    createdAt   : 'createdat',
-    updatedAt   : 'updatedat',
+    createdAt: 'createdat',
+    updatedAt: 'updatedat',
     timestamps: true,
     tableName: 'history',
   })

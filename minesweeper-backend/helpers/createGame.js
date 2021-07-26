@@ -1,6 +1,6 @@
 const createMines = require('./createMines');
 
-const createGame = (gameInfo) => {
+const createGame = (gameInfo, userId) => {
   let firstPoint = 1;
   let sizeOfField = gameInfo.fieldSize.split('x');
   let coordinatesForMines = createMines(gameInfo.minesAmount, +sizeOfField[1], +sizeOfField[0]);

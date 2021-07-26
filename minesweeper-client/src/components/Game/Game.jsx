@@ -6,6 +6,7 @@ import {createMines} from "../../utils/createMines";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBomb} from "@fortawesome/free-solid-svg-icons";
 import {checkCell, findMine, getInfoGame} from "../../redux/reducers/gameReducer";
+import colorsArray from "../../common/colorsArray";
 
 
 class Game extends React.Component {
@@ -53,10 +54,16 @@ class Game extends React.Component {
     // this.props.getInfoGame(this.props.match.params.gameId);
   }
 
+  onExitFromGame = () => {
+    this.props.socket.emit("game/exit");
+    this.props.history.push(`/`);
+  }
+
   render() {
     console.log("listLogs", this.props.listLogs);
     console.log("tableTwoDimensionalOPENED1", this.props);
     console.log("tableTwoDimensionalOPENED", this.props.tableTwoDimensional);
+    console.log("background", classes[`background` + colorsArray[3 % 10]]);
 
     let isGameOver = this.props.isGameOver;
 
@@ -83,7 +90,7 @@ class Game extends React.Component {
           <td onClick={() => {
             sendAction(i, j)
           }}
-              className={`${element.isBlownUp && classes.blownUpBackground} ${element.isOpen && !element.isMine && element.amountOfMines !== 0 && classes.emptyOpened} ${element.isOpen && !element.isMine && element.amountOfMines === 0 && classes.emptyOpened} ${classes.itemCell}`}
+              className={` ${element.isBlownUp && classes.blownUpBackground} ${element.isOpen && !element.isMine && element.amountOfMines !== 0 && classes[`background` + colorsArray[element.userId % 10]]} ${element.isOpen && !element.isMine && element.amountOfMines === 0 && classes[`background` + colorsArray[element.userId % 10]]} ${classes.itemCell}`}
               key={j}> {element.isMine && element.isBlownUp ? <FontAwesomeIcon
             icon={faBomb}/> : (element.isOpen && !element.isMine && element.amountOfMines > 0 && element.amountOfMines)} </td>
         );
@@ -92,41 +99,65 @@ class Game extends React.Component {
         <tr key={i}> {entry} </tr>
       );
     });
-console.log("usersReadiness", this.props.usersReadiness)
-console.log("usersInGame", this.props.gameOwner)
-console.log("usersInGame", this.props.usersInRoom)
-console.log("informationGame", this.props.informationGame)
+    console.log("usersReadiness", this.props.usersReadiness)
+    console.log("usersInGame", this.props.gameOwner)
+    console.log("usersInGame", this.props.usersInRoom)
+    console.log("informationGame", this.props.informationGame)
 
     let maxPlayers = this.props.gamesList.filter(item => {
       return item.gameid === this.props.match.params.gameId
     })
 
     console.log("maxPlayers", maxPlayers)
-    let isStarting = this.props.usersReadiness.find(item => {return !item.isReady})
-    let whoMove = this.props.usersReadiness.find(item => {return item.movePosition })
+    let isStarting = this.props.usersReadiness.find(item => {
+      return !item.isReady
+    })
+    let whoMove = this.props.usersReadiness.find(item => {
+      return item.movePosition
+    })
     return (
-      <div>
-        {this.props.listLogs.map(item => {
-          return <div onClick={() => {this.onShowHistory(item.history)}} className={classes.itemHistory}>i: {item.history.i}; j: {item.history.j}</div>
-        })}
-        {/*<div onClick={() => {drawingMap(tableTwoDimensional)}}>DRAWING MAP</div>*/}
-        {this.props.isGameOver && <div>GAME OVER</div>}
-        {this.props.win && <div>YOU ARE WINNER</div>}
-        <table>
-          {rows}
-        </table>
-        {!this.props.surrendered && this.props.informationGame.isplaying && <div onClick={() => {this.onSurrender()}}>Surrender</div>}
-        <div>list players:
-          {/*<div>owner: {this.props.gameOwner && this.props.gameOwner.username}</div>*/}
-          {
-          this.props.usersReadiness.map(item => {
-          return <div className={`${item.isReady && classes.activeUser} ${item.movePosition && classes.activeMove}`}>{item.username}</div>
-        })}</div>
+      <div className={classes.wrapMain}>
+        <div className={classes.itemBlockLeft}>
+          {/*<div onClick={() => {drawingMap(tableTwoDimensional)}}>DRAWING MAP</div>*/}
+          {this.props.isGameOver && <div>GAME OVER</div>}
+          {this.props.win && <div>YOU ARE WINNER</div>}
+          <table>
+            {rows}
+          </table>
+          {!this.props.surrendered && this.props.informationGame.isplaying && <div onClick={() => {
+            this.onSurrender()
+          }}>Surrender</div>}
+          <div>list players:
+            {/*<div>owner: {this.props.gameOwner && this.props.gameOwner.username}</div>*/}
+            {
+              this.props.usersReadiness.map(item => {
+                return <div
+                  className={`${item.isReady && classes.activeUser} ${item.movePosition && classes.activeMove}`}>{item.username}</div>
+              })}</div>
 
-        {this.props.listViewers.length > 0 && <div>list viewers: {this.props.listViewers.map(item => item.username)} </div>}
-        {maxPlayers[0] && <div>Players: {this.props.usersInRoom[this.props.match.params.gameId]}/{maxPlayers[0].maxplayers}</div>}
-        {this.props.informationGame.isplaying || this.props.surrendered ? '' : (this.props.gameOwner && this.props.gameOwner.username !== JSON.parse(localStorage.getItem('user')).userName) ? !this.state.isReady ? <div onClick={() => {this.onReady()}}>Ready</div> : <div onClick={() => {this.onNotReady()}}>Not ready</div> : ''}
-        {!this.props.informationGame.isplaying && !isStarting ? (maxPlayers[0] && maxPlayers[0].owner == JSON.parse(localStorage.getItem('user')).userId) && <div onClick={() => {this.startGame()}}>START GAME</div> : ''}
+          {this.props.listViewers.length > 0 &&
+          <div>list viewers: {this.props.listViewers.map(item => item.username)} </div>}
+          {maxPlayers[0] &&
+          <div>Players: {this.props.usersInRoom[this.props.match.params.gameId]}/{maxPlayers[0].maxplayers}</div>}
+          {this.props.informationGame.isplaying || this.props.surrendered ? '' : (this.props.gameOwner && this.props.gameOwner.username !== JSON.parse(localStorage.getItem('user')).userName) ? !this.state.isReady ?
+            <div onClick={() => {
+              this.onReady()
+            }}>Ready</div> : <div onClick={() => {
+              this.onNotReady()
+            }}>Not ready</div> : ''}
+          {!this.props.informationGame.isplaying && !isStarting ? (maxPlayers[0] && maxPlayers[0].owner == JSON.parse(localStorage.getItem('user')).userId) &&
+            <div onClick={() => {
+              this.startGame()
+            }}>START GAME</div> : ''}
+          <div onClick={() => {this.onExitFromGame()}}>Exit from game</div>
+        </div>
+        <div className={classes.itemBlockRight}>
+          {this.props.listLogs.map(item => {
+            return <div onClick={() => {
+              this.onShowHistory(item.history)
+            }} className={classes.itemHistory}>{item.username} i: {item.history.i}; j: {item.history.j} value: {item.amountofmines}</div>
+          })}
+        </div>
       </div>
     );
   }

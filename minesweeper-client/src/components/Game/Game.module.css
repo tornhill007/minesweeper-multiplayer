@@ -5,9 +5,9 @@
     height: 24px;
 }
 
-.emptyOpened {
-    background-color: #e8e8e8;
-}
+/*.emptyOpened {*/
+/*    background-color: #e8e8e8;*/
+/*}*/
 
 .blownUpBackground {
     background-color: red;
@@ -31,4 +31,51 @@
 
 .itemHistory:hover {
     color: #2c536c;
+}
+
+.wrapMain {
+    display: flex;
+    justify-content: center;
+}
+
+.backgroundred {
+    background-color: red;
+}
+
+.backgroundblue {
+    background-color: blue;
+}
+
+.backgroundgreen {
+    background-color: green;
+}
+
+.backgroundyellow {
+    background-color: yellow;
+}
+
+.backgroundbrown {
+    background-color: brown;
+}
+
+.backgroundpink {
+    background-color: pink;
+}
+
+.backgroundpurple {
+    background-color: #402955;
+    /*#e8e8e8*/
+    opacity: 0.9;
+}
+
+.backgroundorange {
+    background-color: orange;
+}
+
+.backgrounddarkred {
+    background-color: darkred;
+}
+
+.backgrounddarkgreen {
+    background-color: darkgreen;
 }
