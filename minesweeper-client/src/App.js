@@ -13,6 +13,7 @@ import Auth from "./components/Auth/Auth";
 import {setAuthUserData} from "./redux/reducers/authReducer";
 import {compose} from "redux";
 import {SocketContextProvider} from "./components/Context/SocketContextProvider";
+import Profile from "./components/Profile/Profile";
 
 class App extends React.Component {
 
@@ -44,6 +45,7 @@ class App extends React.Component {
       <div className="App">
         <Auth/>
         <Switch>
+          <DashboardLayoutRoute exact path='/profile' component={Profile}/>
           <DashboardLayoutRoute exact path='/' component={Home}/>
           <DashboardLayoutRoute exact path='/game/:gameId' component={Game}/>
           <LoginLayoutRoute path='/register' component={Register}/>

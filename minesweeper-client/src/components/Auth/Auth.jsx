@@ -8,7 +8,7 @@ import {setIsRender, setSocket} from "../../redux/reducers/socketReducer";
 import {
   setGame,
   setGameOver,
-  setGamesList, setInformationGame, setListLogs, setListViewers, setSurrendered,
+  setGamesList, setInformationGame, setListLogs, setListViewers, setPlayerStats, setSurrendered,
   setUsersInRoom,
   setUsersListReadiness, setWin
 } from "../../redux/reducers/gameReducer";
@@ -43,6 +43,11 @@ class Auth extends React.Component {
       socket.on("game/new", (data) => {
         console.log("NEW_GAME", data)
         this.props.setGame({game: data.dataTable});
+        this.props.setListLogs([]);
+        this.props.setSurrendered(false);
+        this.props.setWin({win: false});
+        this.props.setGameOver({blownUp: false});
+        this.props.setListViewers([]);
         this.props.history.push(`/game/${data.gameId}`)
       })
 
@@ -54,6 +59,12 @@ class Auth extends React.Component {
       socket.on("game/list", (data) => {
         console.log("new_list", data)
         this.props.setGamesList(data);
+      })
+
+      socket.on("game/refresh", (data) => {
+        console.log("refresh", data)
+        // this.props.setGamesList(data);
+        this.props.history.push(`/game/${data.gameId}`)
       })
 
       socket.on("game/users", (data) => {
@@ -89,6 +100,11 @@ class Auth extends React.Component {
       socket.on("game/listViewers", (data) => {
         console.log("listViewers", data)
         this.props.setListViewers(data.listViewers);
+      })
+
+      socket.on("game/playerStats", (data) => {
+        console.log("playerStats", data)
+        this.props.setPlayerStats(data.playerStats);
       })
 
       socket.on("game/listLogs", (data) => {
@@ -134,5 +150,6 @@ export default withRouter(connect(mapStateToProps, {
   setInformationGame,
   setSurrendered,
   setListViewers,
-  setListLogs
+  setListLogs,
+  setPlayerStats
 })(Auth));

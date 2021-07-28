@@ -157,20 +157,29 @@ const surrender = async (socket) => {
 
   let socketsList = Object.values(socketsMap);
 
+
+  let usersInfo = await UserInfo.findAll({
+  })
+
+
   socketsList.forEach(item => {
     item.emit('game/list', activeGamesList);
+    item.emit('game/playerStats', {playerStats: usersInfo})
   })
+
 
 
 
   viewers.forEach(item => {
     socketsMap[item.tabid].emit('game/listViewers', {listViewers: usersTabs})
     // socketsMap[item.tabid].emit('game/list', activeGamesList);
+
     socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameId.gameid], gameOwner})
   })
 
   listUsersInGame.forEach(item => {
     socketsMap[item.tabid].emit('game/listViewers', {listViewers: usersTabs})
+
     // socketsMap[item.tabid].emit('game/list', activeGamesList);
     socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameId.gameid], gameOwner})
   })

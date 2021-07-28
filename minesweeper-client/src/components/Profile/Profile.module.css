@@ -1,0 +1,11 @@
+.mainWrap {
+    display: flex;
+}
+
+.leftItem {
+    width: 10%;
+}
+
+.rightItem {
+    width: 90%;
+}

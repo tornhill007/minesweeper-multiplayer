@@ -112,6 +112,7 @@ class Game extends React.Component {
     let isStarting = this.props.usersReadiness.find(item => {
       return !item.isReady
     })
+    console.log("isStarting", isStarting)
     let whoMove = this.props.usersReadiness.find(item => {
       return item.movePosition
     })
@@ -149,13 +150,17 @@ class Game extends React.Component {
             <div onClick={() => {
               this.startGame()
             }}>START GAME</div> : ''}
-          <div onClick={() => {this.onExitFromGame()}}>Exit from game</div>
+          <div onClick={() => {
+            this.onExitFromGame()
+          }}>Exit from game
+          </div>
         </div>
         <div className={classes.itemBlockRight}>
           {this.props.listLogs.map(item => {
             return <div onClick={() => {
               this.onShowHistory(item.history)
-            }} className={classes.itemHistory}>{item.username} i: {item.history.i}; j: {item.history.j} value: {item.amountofmines}</div>
+            }} className={classes.itemHistory}>{item.username} i: {item.history.i};
+              j: {item.history.j} value: {item.amountofmines}</div>
           })}
         </div>
       </div>
