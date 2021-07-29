@@ -82,7 +82,7 @@ class Game extends React.Component {
       this.props.findMine(i, j)
     }
 
-    let rows = this.props.tableTwoDimensional.map(function (item, i) {
+    let rows = this.props.tableTwoDimensional && this.props.tableTwoDimensional.map(function (item, i) {
       let entry = item.map(function (element, j) {
         return (
           // <td onClick={() => {checkCell(i, j); findMine(i, j)}} className={classes.itemCell} key={j}> {element.isMine ? <FontAwesomeIcon icon={faBomb} /> : (element.isOpen && element.amountOfMines === 0) ? '' : element.amountOfMines} </td>

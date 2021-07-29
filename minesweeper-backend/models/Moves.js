@@ -9,8 +9,8 @@ const Moves = db.define('moves', {
       primaryKey: true,
       allowNull: false
     },
-    tabid: {
-      type: DataTypes.STRING,
+    userid: {
+      type: DataTypes.UUID,
       allowNull: false
     },
   },

@@ -12,17 +12,17 @@ const setPosition = async (gameId) => {
 
   let gameState = usersStateMap[gameId];
   let arr = Object.keys(gameState);
-  let tabid;
+  let userid;
   arr.forEach((item, index) => {
     gameState[item].position = index;
     gameState[item].movePosition = game.moveposition == index;
     if (game.moveposition == index) {
-      tabid = item;
+      userid = gameState[item].userid;
     }
   })
   let newMove = Moves.build({
     gameid: gameId,
-    tabid: tabid
+    userid: userid
   })
   await newMove.save();
 
