@@ -39,6 +39,11 @@ const Games = db.define('games', {
       defaultValue: false,
       allowNull: false
     },
+    isfinished: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false
+    },
     amountofmines: {
       type: DataTypes.UUID,
       allowNull: false

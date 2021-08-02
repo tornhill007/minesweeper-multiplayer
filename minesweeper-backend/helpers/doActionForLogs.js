@@ -2,6 +2,9 @@ const gamesMap = require('../common/gamesMap');
 
 const doActionForLogs = ({i, j}, game, userId) => {
   // let gameTmp = JSON.parse(JSON.stringify(game));
+  if(!i || !j) {
+    return false;
+  }
   let arr = [];
   let table = JSON.parse(JSON.stringify(game));
   if (table[i][j].isMine) {

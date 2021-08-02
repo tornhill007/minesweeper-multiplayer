@@ -101,7 +101,7 @@ class Game extends React.Component {
     });
     console.log("usersReadiness", this.props.usersReadiness)
     console.log("usersInGame", this.props.gameOwner)
-    console.log("usersInGame", this.props.usersInRoom)
+    console.log("usersInRoom", this.props.usersInRoom)
     console.log("informationGame", this.props.informationGame)
 
     let maxPlayers = this.props.gamesList.filter(item => {

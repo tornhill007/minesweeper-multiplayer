@@ -93,6 +93,7 @@ const surrender = async (socket) => {
     await win.save();
     socketsMap[arr[0]].emit("game/surrendered", {surrendered: true});
 
+    game.isfinished = true;
     game.isplaying = false;
 
     socketsMap[arr[0]].emit("game/win", {win: true})

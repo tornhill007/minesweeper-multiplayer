@@ -22,6 +22,7 @@ const SET_SURRENDERED = 'SET_SURRENDERED';
 const SET_LIST_VIEWERS = 'SET_LIST_VIEWERS';
 const SET_LIST_LOGS = 'SET_LIST_LOGS';
 const SET_PLAYER_STATS = 'SET_PLAYER_STATS';
+const SET_ALL_USERS_IN_ROOM = 'SET_ALL_USERS_IN_ROOM';
 
 
 let initialState = {
@@ -48,17 +49,22 @@ const gameReducer = (state = initialState, action) => {
         ...state,
         tableTwoDimensional: action.game,
       };
-      case SET_SURRENDERED:
+    case SET_ALL_USERS_IN_ROOM:
+      return {
+        ...state,
+        usersInRoom: action.usersInRooms,
+      };
+    case SET_SURRENDERED:
       return {
         ...state,
         surrendered: action.surrendered,
       };
-      case SET_LIST_VIEWERS:
+    case SET_LIST_VIEWERS:
       return {
         ...state,
         listViewers: action.listViewers,
       };
-      case SET_LIST_LOGS:
+    case SET_LIST_LOGS:
       return {
         ...state,
         listLogs: action.listLogs,
@@ -67,9 +73,9 @@ const gameReducer = (state = initialState, action) => {
       let arrListReadiness = [];
       let arrTabs = Object.keys(action.data.listReadiness);
       arrTabs.forEach(item => {
-       let obj = {...action.data.listReadiness[item]};
-       console.log("obj", obj)
-       obj.tabid = item;
+        let obj = {...action.data.listReadiness[item]};
+        console.log("obj", obj)
+        obj.tabid = item;
         arrListReadiness.push(obj);
       })
       console.log("gameOwner", action.data.gameOwner)
@@ -83,23 +89,23 @@ const gameReducer = (state = initialState, action) => {
         ...state,
         gamesList: action.gamesList,
       };
-      case SET_INFORMATION_GAME:
+    case SET_INFORMATION_GAME:
       return {
         ...state,
         informationGame: action.gameInfo,
       };
-      case SET_GAME_OVER:
+    case SET_GAME_OVER:
       return {
         ...state,
         isGameOver: action.data.blownUp,
       };
-      case SET_PLAYER_STATS:
+    case SET_PLAYER_STATS:
 
       return {
         ...state,
         playerStats: action.playerStats,
       };
-      case SET_WIN:
+    case SET_WIN:
       return {
         ...state,
         win: action.data.win,
@@ -107,7 +113,12 @@ const gameReducer = (state = initialState, action) => {
     case SET_USERS_IN_ROOM:
       let usersInRoom = JSON.parse(JSON.stringify(state.usersInRoom));
       console.log("action.data1", action.data);
-      usersInRoom[action.data[0].gameid] = action.data.length
+      if(action.data.length == 0) {
+        return {
+          ...state
+        }
+      }
+      usersInRoom[action.data[0].gameid] = action.data.length;
       return {
         ...state,
         usersInRoom: usersInRoom,
@@ -238,6 +249,7 @@ export const setWin = (data) => ({type: SET_WIN, data});
 export const setListViewers = (listViewers) => ({type: SET_LIST_VIEWERS, listViewers});
 export const setListLogs = (listLogs) => ({type: SET_LIST_LOGS, listLogs});
 export const setPlayerStats = (playerStats) => ({type: SET_PLAYER_STATS, playerStats});
+export const setListUsersInRoom = (usersInRooms) => ({type: SET_ALL_USERS_IN_ROOM, usersInRooms});
 
 export const setGamesList = (gamesList) => ({type: SET_GAMES_LIST, gamesList});
 
@@ -258,16 +270,13 @@ export const getInfoGame = (gameId) => async (dispatch) => {
     console.log("responseresponse", response);
     if (response.statusText === 'OK') {
       dispatch(setInformationGame(response.data));
-    }
-    else {
+    } else {
       let message = response.data.messages.length > 0 ? response.data.messages[0] : "Some error";
     }
-  }
-  catch (err) {
+  } catch (err) {
     alert(err.response.data.message)
     console.log("err", err.response.data.message);
   }
-
 
 
 };

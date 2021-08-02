@@ -25,7 +25,7 @@ class Home extends React.Component {
   }
 
   render() {
-    console.log("this.props.gamesList", this.props.gamesList)
+    console.log("this.props.usersInRoom", this.props.usersInRoom)
     return (
       <div className={classes.wrapper}>
         <div className={classes.leftItem}>
@@ -41,7 +41,7 @@ class Home extends React.Component {
           <div>
             <span>LIST OF ACTIVE GAMES</span>
             <div>
-              {this.props.gamesList.map(item => {
+              {this.props.gamesList.filter(game => !game.isfinished).map(item => {
                 return <div>
                   <div onClick={() => {
                     this.joinToGame(item.gameid)
