@@ -117,6 +117,7 @@ io.on("connection", async (socket) => {
         }
       }]
     })
+
     let listUsersInGame = await Tabs.findAll({
       where: {
         gameid: tabInGame.gameid
@@ -129,6 +130,8 @@ io.on("connection", async (socket) => {
         gameid: tabInGame.gameid
       }
     })
+
+
 
 
     let socketsList = Object.values(socketsMap);
@@ -538,27 +541,15 @@ io.on("connection", async (socket) => {
     let filteredHistory = history.filter(item => {
       return Date.parse(item.createdat) <= Date.parse(actionTime.createdat)
     })
-    let i = 0;
-    let state = filteredHistory.filter(item => {
-      return item.type === 'state'
-    })
-    let actionsArr = filteredHistory.filter(item => {
-      return item.type === 'action'
-    })
-    let table = JSON.parse(JSON.stringify(state[0].history));
-    const showTableLogs = () => {
-      if (i === filteredHistory.length) {
-        return;
-      }
-      let newTable = doActionForLogs(filteredHistory[i].history, table, filteredHistory[i].userid);
-      if(newTable) {
-        table = newTable;
-      }
-      i += 1;
-      showTableLogs();
-    }
+    filteredHistory.sort((a,b) => Date.parse(a.createdat) - Date.parse(b.createdat))
 
-    showTableLogs();
+    let state = filteredHistory[0]
+    let actionsArr = filteredHistory.slice(1)
+    let table = JSON.parse(JSON.stringify(state.history));
+
+    for (let j = 0; j < actionsArr.length; j++) {
+      table = doActionForLogs(actionsArr[j].history, table, actionsArr[j].userid);
+    }
 
     socket.emit('game/action', {dataTable: table});
 
@@ -630,7 +621,22 @@ io.on("connection", async (socket) => {
 
     if (isMine) {
 
-      delete usersStateMap[gameId.gameid][socket.handshake.query.tabId]
+      let allTabs = await Users.findOne({
+        include: [{
+          model: Tabs,
+          required: true,
+          where: {
+            userid: socket.user.userid
+          }
+        }]
+      })
+
+      allTabs.tabs.forEach(tab => {
+        if(usersStateMap[gameId.gameid][tab.tabid]) {
+          delete usersStateMap[gameId.gameid][tab.tabid]
+        }
+      })
+      // delete usersStateMap[gameId.gameid][socket.handshake.query.tabId]
 
 
       let tabsGames = await Tabs.findAll({
@@ -784,7 +790,11 @@ io.on("connection", async (socket) => {
       // })
 
     }
-
+    let gameMove = await Moves.findOne({
+      where: {
+        gameid: gameId.gameid
+      }
+    })
     let arr = Object.keys(usersStateMap[gameId.gameid]);
     if (arr.length <= +game.moveposition + 1) {
       game.moveposition = 0;
@@ -793,6 +803,8 @@ io.on("connection", async (socket) => {
     }
 
     await game.save();
+
+
 
     if (arr.length > 1) {
       await changeMove(gameId.gameid, socket.user.userid);
@@ -836,6 +848,8 @@ io.on("connection", async (socket) => {
       }
     })
 
+    history.sort((a,b) => Date.parse(a.createdat) - Date.parse(b.createdat))
+
     let listUsersInGame = await Tabs.findAll({
       where: {
         gameid: gameId.gameid
@@ -878,7 +892,6 @@ io.on("connection", async (socket) => {
   })
 
   socket.on('game/exit', async (data, callback) => {
-
 
     let viewer = await Viewers.findOne({
       where: {
@@ -928,7 +941,7 @@ io.on("connection", async (socket) => {
 
     let tabsArr = tabsGames.map(item => item.tabid);
 
-    let userGames = await Users.findAll({
+    let userGames = await Users.findOne({
       include: [{
         model: Tabs,
         required: true,
@@ -939,11 +952,29 @@ io.on("connection", async (socket) => {
       }]
     })
 
+    // let allTabs = await Users.findOne({
+    //   include: [{
+    //     model: Tabs,
+    //     required: true,
+    //     where: {
+    //       userid: socket.user.userid
+    //     }
+    //   }]
+    // })
+
+
     if (!viewer) {
-      if (game.isplaying && userGames.length <= 1) {
+      if (game.isplaying && userGames.tabs.length <= 1) {
         await surrender(socket);
       }
     }
+
+  // let deletedViewer = await Viewers.destroy({
+  //   where: {
+  //     tabid: socket.handshake.query.tabId
+  //   }
+  // })
+
 
     let viewerNew = await Viewers.findOne({
       where: {
