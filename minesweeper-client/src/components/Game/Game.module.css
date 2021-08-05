@@ -40,26 +40,33 @@
 
 .backgroundred {
     background-color: red;
+    opacity: 0.8;
 }
 
 .backgroundblue {
     background-color: blue;
+    opacity: 0.8;
 }
 
 .backgroundgreen {
     background-color: green;
+    opacity: 0.8;
+
 }
 
 .backgroundyellow {
     background-color: yellow;
+    opacity: 0.8;
 }
 
 .backgroundbrown {
     background-color: brown;
+    opacity: 0.8;
 }
 
 .backgroundpink {
     background-color: pink;
+    opacity: 0.8;
 }
 
 .backgroundpurple {
@@ -70,12 +77,15 @@
 
 .backgroundorange {
     background-color: orange;
+    opacity: 0.8;
 }
 
 .backgrounddarkred {
     background-color: darkred;
+    opacity: 0.8;
 }
 
 .backgrounddarkgreen {
     background-color: darkgreen;
+    opacity: 0.8;
 }

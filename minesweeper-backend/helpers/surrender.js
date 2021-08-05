@@ -128,7 +128,28 @@ const surrender = async (socket) => {
       })
     }
 
-    let userTab = await Users.findOne({
+    // let userTab = await Users.findOne({
+    //   include: [{
+    //     model: Tabs,
+    //     required: true,
+    //     where: {
+    //       tabid: arr[0]
+    //     }
+    //   }]
+    // })
+
+
+    // let allTabs = await Users.findOne({
+    //   include: [{
+    //     model: Tabs,
+    //     required: true,
+    //     where: {
+    //       userid: userTab.userid
+    //     }
+    //   }]
+    // })
+
+    let playerWinner = await Users.findOne({
       include: [{
         model: Tabs,
         required: true,
@@ -136,28 +157,39 @@ const surrender = async (socket) => {
           tabid: arr[0]
         }
       }]
+    });
+
+    let tabsGames = await Tabs.findAll({
+      where: {
+        userid: playerWinner.userid
+      }
     })
 
-    let allTabs = await Users.findOne({
-      include: [{
-        model: Tabs,
-        required: true,
-        where: {
-          userid: userTab.userid
-        }
-      }]
+    let tabsGamesArr = tabsGames.map(item => item.tabid);
+
+    let tabsInGame = await Tabs.findAll({
+      where: {
+        tabid: tabsGamesArr,
+        gameid: gameId.gameid
+      }
     })
 
-    allTabs.tabs.forEach(tab => {
-      if (usersStateMap[gameId.gameid][tab.tabid]) {
-        delete usersStateMap[gameId.gameid][tab.tabid]
+    let tabsArr = tabsInGame.map(item => {
+      return item.tabid
+    })
+
+
+
+    tabsArr.forEach(tab => {
+      if (usersStateMap[gameId.gameid][tab]) {
+        delete usersStateMap[gameId.gameid][tab]
       }
       game.createViewer({
-        tabid: tab.tabid
+        tabid: tab
       })
 
-      socketsMap[tab.tabid].emit("game/surrendered", {surrendered: true});
-      socketsMap[tab.tabid].emit("game/win", {win: true})
+      socketsMap[tab].emit("game/surrendered", {surrendered: true});
+      socketsMap[tab].emit("game/win", {win: true})
 
 
     })
@@ -191,12 +223,12 @@ const surrender = async (socket) => {
   } else {
     game.moveposition = +game.moveposition + 1;
   }
-  let tab = await Tabs.destroy({
-    where: {
-      gameid: gameId.gameid,
-      tabid: socket.handshake.query.tabId
-    }
-  })
+  // let tab = await Tabs.destroy({
+  //   where: {
+  //     gameid: gameId.gameid,
+  //     tabid: socket.handshake.query.tabId
+  //   }
+  // })
   await game.save();
 
 

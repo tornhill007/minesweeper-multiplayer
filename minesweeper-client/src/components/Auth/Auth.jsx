@@ -28,7 +28,7 @@ class Auth extends React.Component {
     if (this.props.token && !this.props.isRender) {
       console.log("RENDER")
       let socket;
-      socket = io('http://192.168.1.229:8080/', {
+      socket = io('http://192.168.1.75:8080/', {
         query: {
           tabId: JSON.parse(sessionStorage.getItem('tabId')),
           loggeduser: this.props.token

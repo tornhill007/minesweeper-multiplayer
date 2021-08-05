@@ -113,16 +113,15 @@ const gameReducer = (state = initialState, action) => {
     case SET_USERS_IN_ROOM:
       let usersInRoom = JSON.parse(JSON.stringify(state.usersInRoom));
       console.log("action.data1", action.data);
-      if(action.data.length == 0) {
+      if(action.data.usersUniq.length == 0) {
         return {
           ...state
         }
       }
-      usersInRoom[action.data[0].gameid] = action.data.length;
+      usersInRoom[action.data.gameid] = action.data.usersUniq.length;
       return {
         ...state,
         usersInRoom: usersInRoom,
-        usersInGame: action.data
       };
     case SET_GAME_INFO:
       return {
