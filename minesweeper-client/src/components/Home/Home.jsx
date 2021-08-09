@@ -5,6 +5,7 @@ import ModalContainer from "../Modal/ModalContainer";
 import {openModal} from "../../redux/reducers/modalReducer";
 import EditModalContainer from "../Modal/EditModal/EditModalContainer";
 import classes from './Home.module.css'
+import {setIsReady} from "../../redux/reducers/gameReducer";
 
 class Home extends React.Component {
 
@@ -13,6 +14,7 @@ class Home extends React.Component {
   }
 
   joinToGame = (gameId) => {
+    this.props.setIsReady({isReady: false})
     this.props.socket.emit('game/join', {gameId}, (data) => {
       console.log(['data'], data)
     })
@@ -73,5 +75,6 @@ const mapStateToProps = (state) => ({
 })
 
 export default withRouter(connect(mapStateToProps, {
-  openModal
+  openModal,
+  setIsReady
 })(Home));

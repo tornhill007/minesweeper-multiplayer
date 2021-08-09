@@ -15,6 +15,7 @@ import {compose} from "redux";
 import {SocketContextProvider} from "./components/Context/SocketContextProvider";
 import Profile from "./components/Profile/Profile";
 
+
 class App extends React.Component {
 
   checkConnection = () => {

@@ -140,7 +140,7 @@ class Game extends React.Component {
           <div>list viewers: {this.props.listViewers.map(item => item.username)} </div>}
           {maxPlayers[0] &&
           <div>Players: {this.props.usersInRoom[this.props.match.params.gameId]}/{maxPlayers[0].maxplayers}</div>}
-          {this.props.informationGame.isplaying || this.props.surrendered ? '' : (this.props.gameOwner && this.props.gameOwner.username !== JSON.parse(localStorage.getItem('user')).userName) ? !this.state.isReady ?
+          {this.props.informationGame.isplaying || this.props.surrendered ? '' : (this.props.gameOwner && this.props.gameOwner.username !== JSON.parse(localStorage.getItem('user')).userName) ? !this.props.isReady ?
             <div onClick={() => {
               this.onReady()
             }}>Ready</div> : <div onClick={() => {
@@ -183,6 +183,7 @@ const mapStateToProps = (state) => ({
   surrendered: state.gamePage.surrendered,
   listViewers: state.gamePage.listViewers,
   listLogs: state.gamePage.listLogs,
+  isReady: state.gamePage.isReady,
 })
 
 export default withRouter(connect(mapStateToProps, {

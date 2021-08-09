@@ -23,6 +23,7 @@ const SET_LIST_VIEWERS = 'SET_LIST_VIEWERS';
 const SET_LIST_LOGS = 'SET_LIST_LOGS';
 const SET_PLAYER_STATS = 'SET_PLAYER_STATS';
 const SET_ALL_USERS_IN_ROOM = 'SET_ALL_USERS_IN_ROOM';
+const SET_IS_READY = 'SET_IS_READY';
 
 
 let initialState = {
@@ -39,7 +40,8 @@ let initialState = {
   surrendered: false,
   listViewers: [],
   listLogs: [],
-  playerStats: []
+  playerStats: [],
+  isReady: false
 };
 
 const gameReducer = (state = initialState, action) => {
@@ -53,6 +55,11 @@ const gameReducer = (state = initialState, action) => {
       return {
         ...state,
         usersInRoom: action.usersInRooms,
+      };
+      case SET_IS_READY:
+      return {
+        ...state,
+        isReady: action.data.isReady,
       };
     case SET_SURRENDERED:
       return {
@@ -119,6 +126,7 @@ const gameReducer = (state = initialState, action) => {
         }
       }
       usersInRoom[action.data.gameid] = action.data.usersUniq.length;
+      console.log("usersInRoom_REDUCER", usersInRoom)
       return {
         ...state,
         usersInRoom: usersInRoom,
@@ -249,6 +257,7 @@ export const setListViewers = (listViewers) => ({type: SET_LIST_VIEWERS, listVie
 export const setListLogs = (listLogs) => ({type: SET_LIST_LOGS, listLogs});
 export const setPlayerStats = (playerStats) => ({type: SET_PLAYER_STATS, playerStats});
 export const setListUsersInRoom = (usersInRooms) => ({type: SET_ALL_USERS_IN_ROOM, usersInRooms});
+export const setIsReady = (data) => ({type: SET_IS_READY, data});
 
 export const setGamesList = (gamesList) => ({type: SET_GAMES_LIST, gamesList});
 

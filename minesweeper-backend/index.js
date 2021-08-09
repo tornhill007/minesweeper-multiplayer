@@ -28,6 +28,7 @@ const doAction = require('./helpers/doAction');
 const doActionForLogs = require('./helpers/doActionForLogs');
 const {Sequelize} = require('sequelize');
 const Op = Sequelize.Op;
+const exitFromGame = require('./helpers/exitFromGame');
 
 //Test DB
 app.use(cors());
@@ -91,16 +92,26 @@ io.on("connection", async (socket) => {
     }]
   })
 
-  if (tabInGame) {
+  let viewerInGame = await Games.findOne({
+    include: [{
+      model: Viewers,
+      required: true,
+      where: {
+        tabid: socket.handshake.query.tabId
+      }
+    }]
+  })
 
+  if (tabInGame || viewerInGame) {
+    let gameid = tabInGame ? tabInGame.gameid : viewerInGame.gameid
     let game = await Games.findOne({
       where: {
-        gameid: tabInGame.gameid
+        gameid: gameid
       }
     })
     let viewers = await Viewers.findAll({
       where: {
-        gameid: tabInGame.gameid
+        gameid: gameid
       }
     })
 
@@ -120,7 +131,7 @@ io.on("connection", async (socket) => {
 
     let usersUniq = await Tabs.findAll({
       where: {
-        gameid: tabInGame.gameid
+        gameid: gameid
       }
     })
 
@@ -128,7 +139,7 @@ io.on("connection", async (socket) => {
     let history = await History.findAll({
       where: {
         type: 'action',
-        gameid: tabInGame.gameid
+        gameid: gameid
       }
     })
 
@@ -149,15 +160,15 @@ io.on("connection", async (socket) => {
       // }
     })
 
-    socket.emit("game/refresh", {gameId: tabInGame.gameid})
-    socket.emit('game/new', {dataTable: gamesMap[tabInGame.gameid], gameId: tabInGame.gameid})
-    socket.emit('game/users', {usersUniq, gameid: tabInGame.gameid});
+    socket.emit("game/refresh", {gameId: gameid, game: game})
+    socket.emit('game/new', {dataTable: gamesMap[gameid], gameId: gameid, game: game})
+    socket.emit('game/users', {usersUniq, gameid: gameid});
     socket.emit('game/listLogs', {history})
     socket.emit('game/listViewers', {listViewers: usersTabs})
     socket.emit('game/info', {game})
     // socket.emit('game/list', activeGamesList);
-    if (usersStateMap[tabInGame.gameid]) {
-      socket.emit('game/listReadiness', {listReadiness: usersStateMap[tabInGame.gameid]})
+    if (usersStateMap[gameid]) {
+      socket.emit('game/listReadiness', {listReadiness: usersStateMap[gameid]})
     }
 
   }
@@ -178,11 +189,13 @@ io.on("connection", async (socket) => {
   //   }
   // })
 
-  let allGames = await Games.findAll({
-    where: {
-      isfinished: false
-    }
-  });
+  let allGames = await Games.findAll(
+  //   {
+  //   where: {
+  //     isfinished: false
+  //   }
+  // }
+  );
 
   // allGames.forEach(item => {
   let usersInGames = {};
@@ -215,8 +228,6 @@ io.on("connection", async (socket) => {
   //     gameid: gameId.gameid
   //   }
   // })
-
-
 
 
   let activeGamesList = await Games.findAll();
@@ -376,7 +387,11 @@ io.on("connection", async (socket) => {
         }]
       })
 
-
+      for (let key in usersStateMap[data.gameId]) {
+        if (usersStateMap[data.gameId][key].userid == socket.user.userid) {
+          socket.emit('game/isReady', {isReady: usersStateMap[data.gameId][key].isReady})
+        }
+      }
 
 
       if (game.isplaying) {
@@ -397,6 +412,8 @@ io.on("connection", async (socket) => {
 
 
         socket.emit('game/new', {dataTable: gamesMap[data.gameId], gameId: data.gameId})
+
+
         socket.emit('game/users', {usersUniq: users, gameid: data.gameId});
         if (usersStateMap[data.gameId]) {
           socket.emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId], gameOwner})
@@ -619,7 +636,6 @@ io.on("connection", async (socket) => {
 
     socket.emit('game/action', {dataTable: table});
 
-    console.log('CREATED_AT', history[0].createdat);
   })
 
   socket.on('game/surrender', async (data, callback) => {
@@ -649,9 +665,15 @@ io.on("connection", async (socket) => {
       }
     })
 
+
     if (!game.isplaying) {
       return;
     }
+
+    if (gamesMap[gameId.gameid][data.i][data.j].isOpen) {
+      return;
+    }
+
 
     let userMove = await Moves.findOne({
       where: {
@@ -939,7 +961,7 @@ io.on("connection", async (socket) => {
           arrTmp.push(item);
         }
       })
-      if(!arr.includes(item.tabid)) {
+      if (!arr.includes(item.tabid)) {
         arrTmp.push(item);
       }
     })
@@ -981,307 +1003,62 @@ io.on("connection", async (socket) => {
 
   socket.on('game/exit', async (data, callback) => {
 
-    let viewer = await Viewers.findOne({
+    await exitFromGame(socket);
+
+  })
+
+  socket.on('game/readiness', async (data, callback) => {
+
+    for (let key in usersStateMap[data.gameId]) {
+      if (usersStateMap[data.gameId][key].userid == socket.user.userid) {
+        usersStateMap[data.gameId][key].isReady = data.isReady;
+      }
+    }
+    // usersStateMap[data.gameId][socket.handshake.query.tabId].isReady = data.isReady;
+
+    let listUsersInGame = await Tabs.findAll({
       where: {
-        tabid: socket.handshake.query.tabId
+        gameid: data.gameId
       }
     })
-
-    let gameid;
-
-    let gameId = await Games.findOne({
-      include: [{
-        model: Tabs,
-        required: true,
-        where: {
-          tabid: socket.handshake.query.tabId
-        }
-      }],
-    })
-
-    if (!gameId) {
-      let gameIdViewer = await Games.findOne({
-        include: [{
-          model: Viewers,
-          required: true,
-          where: {
-            tabid: socket.handshake.query.tabId
-          }
-        }],
-      })
-
-      gameid = gameIdViewer.gameid
-    } else {
-      gameid = gameId.gameid;
-    }
-
     let game = await Games.findOne({
       where: {
-        gameid: gameid
+        gameid: data.gameId
+      }
+    })
+    let gameOwner = await Users.findOne({
+      where: {
+        userid: game.owner
       }
     })
 
     let tabsGames = await Tabs.findAll({
       where: {
-        gameid: gameid
+        userid: socket.user.userid
       }
     })
 
-    let tabsArr = tabsGames.map(item => item.tabid);
+    let tabsGamesArr = tabsGames.map(item => item.tabid);
 
-    let userGames = await Users.findOne({
-      include: [{
-        model: Tabs,
-        required: true,
-        where: {
-          userid: socket.user.userid,
-          tabid: tabsArr
-        }
-      }]
-    })
-
-    // let allTabs = await Users.findOne({
-    //   include: [{
-    //     model: Tabs,
-    //     required: true,
-    //     where: {
-    //       userid: socket.user.userid
-    //     }
-    //   }]
-    // })
-
-
-    if (!viewer) {
-      if (game.isplaying && userGames.tabs.length <= 1) {
-        await surrender(socket);
-      }
-    }
-
-    // let deletedViewer = await Viewers.destroy({
-    //   where: {
-    //     tabid: socket.handshake.query.tabId
-    //   }
-    // })
-
-
-    let viewerNew = await Viewers.findOne({
+    let tabsInGame = await Tabs.findAll({
       where: {
-        tabid: socket.handshake.query.tabId
+        tabid: tabsGamesArr,
+        gameid: data.gameId
       }
     })
 
-    let gameOwner = await Users.findOne({
-      where: {
-        userid: game.owner
-      }
-    })
-
-    if (usersStateMap[gameid] [socket.handshake.query.tabId]) {
-      usersStateMap[gameid][socket.handshake.query.tabId].isReady = false;
-    }
-
-
-    let socketsList = Object.values(socketsMap);
-
-    if (userGames) {
-      let tabDeleted = await Tabs.destroy({
-        where: {
-          gameid: gameid,
-          tabid: socket.handshake.query.tabId
-        }
-      })
-    } else {
-      if (viewerNew) {
-        await viewerNew.destroy();
-        socket.emit("game/surrendered", {surrendered: false});
-        let tab = await Tabs.destroy({
-          where: {
-            gameid: gameid,
-            tabid: socket.handshake.query.tabId
-          }
-        })
-
-
-        // let destroyedViewer = await Viewers.destroy({
-        //   where: {
-        //     tabid: socket.handshake.query.tabId,
-        //     gameid: gameid
-        //   }
-        // })
-      } else {
-
-        delete usersStateMap[gameid][socket.handshake.query.tabId]
-      }
-
-      let listUsersInGame = await Tabs.findAll({
-        where: {
-          gameid: gameid
-        }
-      })
-      if (listUsersInGame.length > 0) {
-
-        let listTabsInGame = listUsersInGame.map(tab => tab.tabid)
-
-        let users = await Users.findAll({
-          include: [{
-            model: Tabs,
-            required: true,
-            where: {
-              tabid: listTabsInGame
-            }
-          }]
-        })
-
-        socketsList.forEach(item => {
-          item.emit('game/users', {usersUniq: users, gameid: gameid});
-        })
-      } else {
-        await game.destroy();
-      }
-    }
-
-
-    let viewers = await Viewers.findAll({
-      where: {
-        gameid: gameid
-      }
-    })
-
-    let tabs = viewers.map(item => {
+    let tabsArr = tabsInGame.map(item => {
       return item.tabid
     })
 
-    let usersTabs = await Users.findAll({
-      include: [{
-        model: Tabs,
-        required: true,
-        where: {
-          tabid: tabs
-        }
-      }]
-    })
-
-    let deletedTab = await Tabs.destroy({
-      where: {
-        gameid: gameid,
-        tabid: socket.handshake.query.tabId
-      }
-    })
-
-    let restUsersInGame = await Tabs.findAll({
-      where: {
-        gameid: gameid
-      }
-    })
-
-    let restListTabsInGame = restUsersInGame.map(tab => tab.tabid)
-
-    let restUsers = await Users.findAll({
-      include: [{
-        model: Tabs,
-        required: true,
-        where: {
-          tabid: restListTabsInGame
-        }
-      }]
-    })
-
-    if(restUsers.length === 1) {
-      delete usersStateMap[gameid][socket.handshake.query.tabId]
-    }
-
-
-    let usersInGame = await Games.findAll({
-      include: [{
-        model: Tabs,
-        required: true,
-        where: {
-          gameid: gameid
-        }
-      }]
-    })
-
-    if (usersInGame.length === 0) {
-      await game.destroy();
-      let historyDestroyed = await History.destroy({
-        where: {
-          gameid: gameid
-        }
-      })
-    }
-
-    let activeGamesList = await Games.findAll();
-
-    let listUsersInGame = await Tabs.findAll({
-      where: {
-        gameid: gameid
-      }
-    })
-
-    let viewerDestroyed = await Viewers.destroy({
-      where: {
-        gameid: gameid,
-        tabid: socket.handshake.query.tabId
-      }
-    })
-
-    let listTabsInGame = listUsersInGame.map(tab => tab.tabid)
-
-    let users = await Users.findAll({
-      include: [{
-        model: Tabs,
-        required: true,
-        where: {
-          tabid: listTabsInGame
-        }
-      }]
-    })
-
-
-    socketsList.forEach(item => {
-      item.emit('game/list', activeGamesList);
-      item.emit('game/users', {usersUniq: users, gameid: gameid});
-    })
-
-
-    listUsersInGame.forEach(item => {
-      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameid], gameOwner})
-      // socketsMap[item.tabid].emit('game/list', activeGamesList);
-      // socketsMap[item.tabid].emit('game/users', listUsersInGame);
-      socketsMap[item.tabid].emit('game/listViewers', {listViewers: usersTabs})
-    })
-
-    viewers.forEach(item => {
-      socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[gameid], gameOwner})
-      // socketsMap[item.tabid].emit('game/list', activeGamesList);
-      // socketsMap[item.tabid].emit('game/users', listUsersInGame);
-      socketsMap[item.tabid].emit('game/listViewers', {listViewers: usersTabs})
-    })
-
-  })
-
-  socket.on('game/readiness', async (data, callback) => {
-    usersStateMap[data.gameId][socket.handshake.query.tabId].isReady = data.isReady;
-
-    let listUsersInGame = await Tabs.findAll({
-      where: {
-        gameid: data.gameId
-      }
-    })
-    let game = await Games.findOne({
-      where: {
-        gameid: data.gameId
-      }
-    })
-    let gameOwner = await Users.findOne({
-      where: {
-        userid: game.owner
-      }
-    })
     listUsersInGame.forEach(item => {
       socketsMap[item.tabid].emit('game/listReadiness', {listReadiness: usersStateMap[data.gameId], gameOwner})
     })
-    console.log(1);
+
+    tabsArr.forEach(item => {
+      socketsMap[item].emit('game/isReady', {isReady: data.isReady})
+    })
+
   })
 
   socket.on('game/start', async (data, callback) => {
@@ -1332,6 +1109,43 @@ io.on("connection", async (socket) => {
       socketsMap[item.tabid].emit('game/info', {game})
     })
 
+  })
+
+  socket.on('disconnect', async (data) => {
+
+    let tabInGame = await Games.findOne({
+      include: [{
+        model: Tabs,
+        required: true,
+        where: {
+          tabid: socket.handshake.query.tabId
+        }
+      }]
+    })
+
+    let viewerInGame = await Games.findOne({
+      include: [{
+        model: Viewers,
+        required: true,
+        where: {
+          tabid: socket.handshake.query.tabId
+        }
+      }]
+    })
+
+    if (tabInGame || viewerInGame) {
+      let gameid = tabInGame ? tabInGame.gameid : viewerInGame.gameid
+      let game = await Games.findOne({
+        where: {
+          gameid: gameid
+        }
+      })
+      if (game.isplaying || game.isfinished) {
+        return
+      }
+    }
+
+    await exitFromGame(socket);
   })
 });
 

@@ -8,9 +8,17 @@ import {setIsRender, setSocket} from "../../redux/reducers/socketReducer";
 import {
   setGame,
   setGameOver,
-  setGamesList, setInformationGame, setListLogs, setListUsersInRoom, setListViewers, setPlayerStats, setSurrendered,
+  setGamesList,
+  setInformationGame,
+  setIsReady,
+  setListLogs,
+  setListUsersInRoom,
+  setListViewers,
+  setPlayerStats,
+  setSurrendered,
   setUsersInRoom,
-  setUsersListReadiness, setWin
+  setUsersListReadiness,
+  setWin
 } from "../../redux/reducers/gameReducer";
 
 class Auth extends React.Component {
@@ -48,7 +56,12 @@ class Auth extends React.Component {
         this.props.setWin({win: false});
         this.props.setGameOver({blownUp: false});
         this.props.setListViewers([]);
-        this.props.history.push(`/game/${data.gameId}`)
+        console.log("data_game", data.game)
+        if (!data.game) {
+          this.props.history.push(`/game/${data.gameId}`)
+        } else if (data.game.isplaying || data.game.isfinished) {
+          this.props.history.push(`/game/${data.gameId}`)
+        }
       })
 
       socket.on("game/action", (data) => {
@@ -64,12 +77,28 @@ class Auth extends React.Component {
       socket.on("game/refresh", (data) => {
         console.log("refresh", data)
         // this.props.setGamesList(data);
-        this.props.history.push(`/game/${data.gameId}`)
+        if (data.game.isplaying || data.game.isfinished) {
+          console.log("KKKKKKKKKEK")
+          this.props.history.push(`/game/${data.gameId}`)
+        }
       })
 
       socket.on("game/users", (data) => {
         console.log("list_users_in_room", data)
         this.props.setUsersInRoom(data);
+      })
+
+      socket.on("game/delete/byOwner", (data) => {
+        console.log("game_delete_byOwner", data)
+        if (data.gameDeletedByOwner) {
+          this.props.history.push(`/`)
+        }
+        // this.props.setUsersInRoom(data);
+      })
+
+      socket.on("game/isReady", (data) => {
+        console.log("game_isReady", data)
+        this.props.setIsReady(data);
       })
 
       socket.on("game/listReadiness", (data) => {
@@ -157,5 +186,6 @@ export default withRouter(connect(mapStateToProps, {
   setListViewers,
   setListLogs,
   setPlayerStats,
-  setListUsersInRoom
+  setListUsersInRoom,
+  setIsReady
 })(Auth));

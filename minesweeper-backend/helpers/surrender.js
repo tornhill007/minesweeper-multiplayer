@@ -29,6 +29,12 @@ const surrender = async (socket) => {
     }
   })
 
+  let gameMove = await Moves.findOne({
+    where: {
+      gameid: gameId.gameid
+    }
+  })
+
   let gameOwner = await Users.findOne({
     where: {
       userid: game.owner
@@ -53,6 +59,14 @@ const surrender = async (socket) => {
       }
     }]
   })
+
+  if(userGames.tabs.length <= 1) {
+    for(let key in usersStateMap[gameId.gameid]) {
+      if(usersStateMap[gameId.gameid][key].userid == socket.user.userid) {
+        delete usersStateMap[gameId.gameid][key]
+      }
+    }
+  }
 
   // let allTabs = await Users.findOne({
   //   include: [{
@@ -79,7 +93,10 @@ const surrender = async (socket) => {
   for (let i = 0; i < arr.length; i++) {
     usersStateMap[gameId.gameid][arr[i]].position = i;
   }
-  game.moveposition = +game.moveposition - 1;
+  if (gameMove.userid == socket.user.userid) {
+    game.moveposition = +game.moveposition - 1;
+  }
+
   let userInfo = await UserInfo.findOne({
     where: {
       userid: socket.user.userid
@@ -212,17 +229,20 @@ const surrender = async (socket) => {
       gameid: gameId.gameid
     }
   })
-  let gameMove = await Moves.findOne({
-    where: {
-      gameid: gameId.gameid
-    }
-  })
+
   // let arr1 = Object.keys(usersStateMap[gameId.gameid]);
-  if (arr.length <= +game.moveposition + 1) {
-    game.moveposition = 0;
-  } else {
-    game.moveposition = +game.moveposition + 1;
+
+
+  if (arr.length !== 1) {
+    if (arr.length <= +game.moveposition + 1) {
+      game.moveposition = 0;
+    } else if (gameMove.userid == socket.user.userid) {
+      game.moveposition = +game.moveposition + 1;
+    }
   }
+
+
+  
   // let tab = await Tabs.destroy({
   //   where: {
   //     gameid: gameId.gameid,
@@ -233,7 +253,7 @@ const surrender = async (socket) => {
 
 
 
-  if (arr.length > 1 ) {
+  if (arr.length > 1 && gameMove.userid == socket.user.userid) {
     await changeMove(gameId.gameid);
   }
 
