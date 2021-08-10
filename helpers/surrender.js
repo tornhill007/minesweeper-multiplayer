@@ -8,7 +8,7 @@ const Viewers = require('../models/Viewers');
 const Moves = require('../models/Moves');
 const Tabs = require('../models/Tabs');
 const UserInfo = require('../models/UserInfo');
-const changeMove = require('../helpers/changeMove');
+const changeMove = require('./changeMove');
 
 const surrender = async (socket) => {
   socket.emit("game/surrendered", {surrendered: true});

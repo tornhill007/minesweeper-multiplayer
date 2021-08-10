@@ -135,14 +135,12 @@ io.on("connection", async (socket) => {
       }
     })
 
-
     let history = await History.findAll({
       where: {
         type: 'action',
         gameid: gameid
       }
     })
-
 
     let socketsList = Object.values(socketsMap);
 
@@ -151,7 +149,6 @@ io.on("connection", async (socket) => {
         userid: game.owner
       }
     })
-
 
     socketsList.forEach(item => {
       // item.emit('game/list', activeGamesList);
@@ -170,7 +167,6 @@ io.on("connection", async (socket) => {
     if (usersStateMap[gameid]) {
       socket.emit('game/listReadiness', {listReadiness: usersStateMap[gameid]})
     }
-
   }
 
   let gameId = await Games.findOne({
@@ -190,11 +186,11 @@ io.on("connection", async (socket) => {
   // })
 
   let allGames = await Games.findAll(
-  //   {
-  //   where: {
-  //     isfinished: false
-  //   }
-  // }
+    //   {
+    //   where: {
+    //     isfinished: false
+    //   }
+    // }
   );
 
   // allGames.forEach(item => {
@@ -1149,6 +1145,8 @@ io.on("connection", async (socket) => {
   })
 });
 
-httpServer.listen(8080, () => {
+const port = process.env.PORT || 8080;
+
+httpServer.listen(port, () => {
   console.log("Server has started on 8080 port")
 });

@@ -37,6 +37,15 @@ module.exports = async (socket) => {
       }],
     })
 
+    if(!gameIdViewer) {
+      await Tabs.destroy({
+        where: {
+          tabid: socket.handshake.query.tabId
+        }
+      })
+      return;
+    }
+
     gameid = gameIdViewer.gameid
   } else {
     gameid = gameId.gameid;

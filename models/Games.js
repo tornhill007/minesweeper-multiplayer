@@ -1,7 +1,7 @@
 const {Sequelize, DataTypes} = require('sequelize');
 const db = require('../config/database');
-const Tabs = require('../models/Tabs');
-const Viewers = require('../models/Viewers');
+const Tabs = require('./Tabs');
+const Viewers = require('./Viewers');
 
 // CREATE TABLE games(
 //   id serial NOT NULL PRIMARY KEY,

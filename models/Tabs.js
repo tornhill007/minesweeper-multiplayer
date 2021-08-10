@@ -1,8 +1,8 @@
 const {Sequelize, DataTypes} = require('sequelize');
 const db = require('../config/database');
-const Rooms = require('../models/Rooms');
+const Rooms = require('./Rooms');
 
-const Viewers = db.define('viewers', {
+const Tabs = db.define('tabs', {
     id: {
       type: DataTypes.UUID,
       autoIncrement: true,
@@ -13,21 +13,18 @@ const Viewers = db.define('viewers', {
       type: DataTypes.STRING,
       allowNull: false
     },
+    userid: {
+      type: DataTypes.UUID,
+    },
     gameid: {
       type: DataTypes.STRING,
-      allowNull: false
-    },
-    islive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      allowNull: false
     }
   },
   {
     createdAt: 'createdat',
     updatedAt: 'updatedat',
     timestamps: true,
-    tableName: 'viewers',
+    tableName: 'tabs',
   })
 
 // Tabs.getTabById = function (tabid) {
@@ -38,4 +35,4 @@ const Viewers = db.define('viewers', {
 //   });
 // }
 
-module.exports = Viewers;
+module.exports = Tabs;

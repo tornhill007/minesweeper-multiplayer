@@ -33,10 +33,22 @@ class Auth extends React.Component {
 
   componentDidUpdate(prevProps, prevState, snapshot) {
 
+
+  }
+
+  render() {
+
+    if (!JSON.parse(sessionStorage.getItem('tabId'))) {
+      let tabId = generateUID();
+      window.sessionStorage.setItem("tabId", JSON.stringify(tabId))
+    }
+
+
+
     if (this.props.token && !this.props.isRender) {
       console.log("RENDER")
       let socket;
-      socket = io('http://192.168.1.75:8080/', {
+      socket = io('https://pern-minesweeper-multiplayer.herokuapp.com/', {
         query: {
           tabId: JSON.parse(sessionStorage.getItem('tabId')),
           loggeduser: this.props.token
@@ -149,14 +161,10 @@ class Auth extends React.Component {
 
       this.props.setIsRender(true)
     }
-  }
 
-  render() {
 
-    if (!JSON.parse(sessionStorage.getItem('tabId'))) {
-      let tabId = generateUID();
-      window.sessionStorage.setItem("tabId", JSON.stringify(tabId))
-    }
+
+
 
     if (!this.props.token) return <Redirect to={'/login'}/>
 
