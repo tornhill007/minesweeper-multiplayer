@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Komar Andrew",
@@ -18,6 +19,7 @@
     "passport-jwt": "^4.0.0",
     "pg": "^8.6.0",
     "sequelize": "^6.6.5",
+    "serve-static": "^1.14.1",
     "socket.io": "^4.1.3"
   }
 }

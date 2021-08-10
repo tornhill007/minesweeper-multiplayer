@@ -29,10 +29,12 @@ const doActionForLogs = require('./helpers/doActionForLogs');
 const {Sequelize} = require('sequelize');
 const Op = Sequelize.Op;
 const exitFromGame = require('./helpers/exitFromGame');
+const serveStatic = require('serve-static')
 
 //Test DB
 app.use(cors());
 app.use(express.json());
+app.use(serveStatic(__dirname, '/minesweeper-client/build'));
 
 sequelize.authenticate().then(() => {
   console.log("Database connected...")
